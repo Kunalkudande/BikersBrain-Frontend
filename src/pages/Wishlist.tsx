@@ -1,62 +1,47 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, ShoppingCart, Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
-import { userApi } from "@/lib/api";
+import { useWishlist } from "@/hooks/useWishlist";
 import { useToast } from "@/hooks/use-toast";
 
-interface WishlistItem {
-  id: string;
-  product: {
-    id: string;
-    name: string;
-    slug: string;
-    brand: string;
-    price: number;
-    discountPrice?: number;
-    rating: number;
-    stock: number;
-    images: { imageUrl: string }[];
-  };
-}
-
 export default function Wishlist() {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const { addItem } = useCart();
+  const { addItem, isGuest: cartIsGuest } = useCart();
+  const { items, isLoading: loading, remove } = useWishlist();
   const { toast } = useToast();
-
-  const [items, setItems] = useState<WishlistItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!isAuthenticated) { navigate("/login", { state: { from: "/wishlist" } }); return; }
-    userApi.getWishlist()
-      .then((res) => { if (res.success) setItems(res.data as WishlistItem[]); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [isAuthenticated, navigate]);
 
   const handleRemove = async (productId: string) => {
     try {
-      await userApi.removeFromWishlist(productId);
-      setItems((prev) => prev.filter(i => i.product.id !== productId));
+      await remove(productId);
       toast({ title: "Removed from wishlist" });
     } catch {
       toast({ title: "Failed to remove", variant: "destructive" });
     }
   };
 
-  const handleMoveToCart = async (item: WishlistItem) => {
+  const handleMoveToCart = async (item: typeof items[number]) => {
     try {
-      await addItem(item.product.id, 1);
-      await handleRemove(item.product.id);
+      if (cartIsGuest) {
+        await addItem(item.product.id, 1, undefined, {
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            slug: item.product.slug,
+            brand: item.product.brand,
+            price: Number(item.product.price),
+            discountPrice: item.product.discountPrice ? Number(item.product.discountPrice) : undefined,
+            stock: item.product.stock,
+            images: item.product.images,
+          },
+        });
+      } else {
+        await addItem(item.product.id, 1);
+      }
+      await remove(item.product.id);
       toast({ title: "Moved to cart!", description: item.product.name });
     } catch {
       toast({ title: "Failed to move to cart", variant: "destructive" });

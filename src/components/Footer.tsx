@@ -16,8 +16,8 @@ import {
 import logo from "@/assets/bikersbrain_logo_only_brain.png";
 
 const CONTACT_INFO = {
-  email: "support@bikersbrain.com",
-  phone: "+91 98765 43210",
+  email: "bikersbrain.official@gmail.com",
+  phone: "+91 97621 63742",
   address: "Pune, Maharashtra, India",
   workingHours: "Mon-Sat: 9AM – 8PM",
 };
@@ -81,8 +81,8 @@ const Footer = () => {
 
   const trustBadges = [
     { Icon: ShieldCheck, title: "ISI & DOT Certified", desc: "Genuine Products Only" },
-    { Icon: Truck, title: "Free Shipping", desc: "Orders Above ₹999" },
-    { Icon: RotateCcw, title: "7-Day Returns", desc: "Hassle-Free Process" },
+    { Icon: Truck, title: "Free Shipping", desc: "Orders Above ₹2,999" },
+    { Icon: RotateCcw, title: "3-Day Returns", desc: "Hassle-Free Process" },
     { Icon: CreditCard, title: "Secure Payment", desc: "UPI, Cards, COD" },
   ];
 

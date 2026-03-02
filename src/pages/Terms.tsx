@@ -39,7 +39,7 @@ export default function Terms() {
 
               <h2 className="text-lg font-semibold text-foreground">4. Shipping</h2>
               <p>
-                We ship across India. Free shipping is available on orders above ₹999. Delivery times may vary based
+                We ship across India. Free shipping is available on orders above ₹2,999. Delivery times may vary based
                 on your location. Standard delivery takes 3–7 business days.
               </p>
 
@@ -68,7 +68,7 @@ export default function Terms() {
                   Contact page
                 </Link>{" "}
                 or email{" "}
-                <a href="mailto:support@bikersbrain.in" className="text-primary hover:underline">
+                <a href="mailto:bikersbrain.official@gmail.com" className="text-primary hover:underline">
                   support@bikersbrain.in
                 </a>
                 .

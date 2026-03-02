@@ -143,7 +143,7 @@ export default function Checkout() {
   const items = cart?.items ?? [];
   const subtotal = items.reduce((sum: number, item: any) =>
     sum + Number(item.product.discountPrice || item.product.price) * item.quantity, 0);
-  const shipping = subtotal >= 999 ? 0 : 99;
+  const shipping = subtotal >= 2999 ? 0 : 99;
   const couponDiscount = couponApplied?.discount || 0;
   const total = subtotal + shipping - couponDiscount;
 

@@ -3,7 +3,7 @@ import { Truck, Shield, RotateCcw, Headphones } from "lucide-react";
 const features = [
   { icon: Truck, title: "Free Shipping", desc: "On orders over ₹2,999" },
   { icon: Shield, title: "Authentic Gear", desc: "100% genuine products" },
-  { icon: RotateCcw, title: "Easy Returns", desc: "5-day return policy" },
+  { icon: RotateCcw, title: "Easy Returns", desc: "3-day return policy" },
   { icon: Headphones, title: "Expert Support", desc: "Riders helping riders" },
 ];
 

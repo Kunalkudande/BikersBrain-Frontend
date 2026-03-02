@@ -60,15 +60,15 @@ export default function Contact() {
                 <div className="bg-card rounded-lg border border-border p-5">
                   <Mail className="h-6 w-6 text-primary mb-2" />
                   <h3 className="font-semibold mb-1">Email Us</h3>
-                  <a href="mailto:support@bikersbrain.com" className="text-sm text-muted-foreground hover:text-primary">
-                    support@bikersbrain.com
+                  <a href="mailto:bikersbrain.official@gmail.com" className="text-sm text-muted-foreground hover:text-primary">
+                    bikersbrain.official@gmail.com
                   </a>
                 </div>
                 <div className="bg-card rounded-lg border border-border p-5">
                   <Phone className="h-6 w-6 text-primary mb-2" />
                   <h3 className="font-semibold mb-1">Call Us</h3>
-                  <a href="tel:+919876543210" className="text-sm text-muted-foreground hover:text-primary">
-                    +91 98765 43210
+                  <a href="tel:+919762163742" className="text-sm text-muted-foreground hover:text-primary">
+                    +91 97621 63742
                   </a>
                 </div>
                 <div className="bg-card rounded-lg border border-border p-5">

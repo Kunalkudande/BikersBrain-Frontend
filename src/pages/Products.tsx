@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { productsApi } from "@/lib/api";
+import { useWishlist } from "@/hooks/useWishlist";
 
 const SORT_OPTIONS = [
   { value: "createdAt:desc", label: "Newest First" },
@@ -43,6 +44,7 @@ export default function Products() {
   const [isLoading, setIsLoading] = useState(true);
   const [brands, setBrands] = useState<string[]>([]);
   const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
+  const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const page = parseInt(searchParams.get("page") || "1");
@@ -311,10 +313,27 @@ export default function Products() {
                               </div>
                             )}
                             <button
-                              className="absolute top-3 right-3 w-8 h-8 bg-background/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary hover:text-primary-foreground"
-                              onClick={(e) => e.preventDefault()}
+                              className={`absolute top-3 right-3 w-8 h-8 backdrop-blur-sm rounded-full flex items-center justify-center transition-all ${
+                                isWishlisted(product.id)
+                                  ? "bg-primary text-primary-foreground opacity-100"
+                                  : "bg-background/80 opacity-0 group-hover:opacity-100 hover:bg-primary hover:text-primary-foreground"
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                toggleWishlist(product.id, {
+                                  id: product.id,
+                                  name: product.name,
+                                  slug: product.slug,
+                                  brand: product.brand,
+                                  price: Number(product.price),
+                                  discountPrice: product.discountPrice ? Number(product.discountPrice) : undefined,
+                                  rating: Number(product.rating ?? 0),
+                                  stock: product.stock,
+                                  images: product.images,
+                                });
+                              }}
                             >
-                              <Heart className="h-4 w-4" />
+                              <Heart className={`h-4 w-4 ${isWishlisted(product.id) ? "fill-current" : ""}`} />
                             </button>
                           </div>
                           <div className="p-4">

@@ -62,7 +62,7 @@ export default function PrivacyPolicy() {
                   Contact page
                 </Link>{" "}
                 or email{" "}
-                <a href="mailto:support@bikersbrain.in" className="text-primary hover:underline">
+                <a href="mailto:bikersbrain.official@gmail.com" className="text-primary hover:underline">
                   support@bikersbrain.in
                 </a>
                 .

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, ChevronRight, Check, MessageCircle } from "lucide-react";
+import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, ChevronLeft, ChevronRight, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { productsApi } from "@/lib/api";
 import { useCart } from "@/hooks/useCart";
+import { useWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -81,6 +82,7 @@ export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
   const { toast } = useToast();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -90,6 +92,27 @@ export default function ProductDetail() {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [isZooming, setIsZooming] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const zoomRef = useRef<HTMLDivElement>(null);
+
+  const handleZoomMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!zoomRef.current) return;
+    const rect = zoomRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
+
+  const prevImage = () => {
+    if (!product) return;
+    setSelectedImage((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
+  };
+
+  const nextImage = () => {
+    if (!product) return;
+    setSelectedImage((prev) => (prev === product.images.length - 1 ? 0 : prev + 1));
+  };
 
   useEffect(() => {
     if (!slug) return;
@@ -236,20 +259,75 @@ export default function ProductDetail() {
 
         <div className="container mx-auto px-4 pb-16">
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            {/* Images */}
-            <div>
-              <motion.div
-                key={selectedImage}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="aspect-square rounded-lg overflow-hidden bg-card border border-border mb-4"
-              >
-                <img
-                  src={product.images[selectedImage]?.imageUrl || "https://placehold.co/800x800/1F2937/FF6B35?text=No+Image"}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              </motion.div>
+            {/* Images + Zoom side panel */}
+            <div className="relative">
+              <div className="relative mb-4 group">
+                <div
+                  ref={zoomRef}
+                  onMouseEnter={() => setIsZooming(true)}
+                  onMouseLeave={() => setIsZooming(false)}
+                  onMouseMove={handleZoomMove}
+                  className="aspect-square rounded-lg overflow-hidden bg-card border border-border cursor-crosshair"
+                >
+                  <motion.img
+                    key={selectedImage}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    src={product.images[selectedImage]?.imageUrl || "https://placehold.co/800x800/1F2937/FF6B35?text=No+Image"}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                  />
+
+                  {/* Hover lens indicator */}
+                  {isZooming && (
+                    <div
+                      className="absolute pointer-events-none border-2 border-primary/60 bg-primary/10 rounded"
+                      style={{
+                        width: "40%",
+                        height: "40%",
+                        left: `${Math.min(Math.max(zoomPos.x - 20, 0), 60)}%`,
+                        top: `${Math.min(Math.max(zoomPos.y - 20, 0), 60)}%`,
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* Zoom side panel — appears on top of product info column */}
+                {isZooming && (
+                  <div
+                    className="hidden md:block absolute top-0 left-[calc(100%+1rem)] z-50 w-full aspect-square rounded-lg border border-border bg-card overflow-hidden shadow-2xl"
+                    style={{
+                      backgroundImage: `url(${product.images[selectedImage]?.imageUrl || "https://placehold.co/800x800/1F2937/FF6B35?text=No+Image"})`,
+                      backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+                      backgroundSize: "250%",
+                      backgroundRepeat: "no-repeat",
+                    }}
+                  />
+                )}
+
+                {/* Prev / Next arrows */}
+                {product.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </>
+                )}
+              </div>
+
               {product.images.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto">
                   {product.images.map((img, i) => (
@@ -384,8 +462,26 @@ export default function ProductDetail() {
                   <ShoppingCart className="h-4 w-4" />
                   {maxStock === 0 ? "Out of Stock" : isAdding ? "Adding..." : "Add to Cart"}
                 </Button>
-                <Button size="lg" variant="outline" className="px-3">
-                  <Heart className="h-5 w-5" />
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className={`px-3 ${product && isWishlisted(product.id) ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}`}
+                  onClick={() => {
+                    if (!product) return;
+                    toggleWishlist(product.id, {
+                      id: product.id,
+                      name: product.name,
+                      slug: product.slug,
+                      brand: product.brand,
+                      price: Number(product.price),
+                      discountPrice: product.discountPrice ? Number(product.discountPrice) : undefined,
+                      rating: Number(product.rating ?? 0),
+                      stock: product.stock,
+                      images: product.images,
+                    });
+                  }}
+                >
+                  <Heart className={`h-5 w-5 ${product && isWishlisted(product.id) ? "fill-current" : ""}`} />
                 </Button>
               </div>
 
@@ -435,10 +531,10 @@ export default function ProductDetail() {
 
           {/* Tabs: Description, Specs, Reviews */}
           <Tabs defaultValue="description" className="mt-12">
-            <TabsList className="bg-secondary/50 w-full justify-start">
-              <TabsTrigger value="description" className="font-barlow-condensed font-semibold uppercase tracking-wider">Description</TabsTrigger>
-              <TabsTrigger value="specifications" className="font-barlow-condensed font-semibold uppercase tracking-wider">Specifications</TabsTrigger>
-              <TabsTrigger value="reviews" className="font-barlow-condensed font-semibold uppercase tracking-wider">
+            <TabsList className="bg-secondary/50 w-full justify-center h-auto p-1">
+              <TabsTrigger value="description" className="font-barlow-condensed font-semibold uppercase tracking-wider text-base md:text-lg px-6 py-3">Description</TabsTrigger>
+              <TabsTrigger value="specifications" className="font-barlow-condensed font-semibold uppercase tracking-wider text-base md:text-lg px-6 py-3">Specifications</TabsTrigger>
+              <TabsTrigger value="reviews" className="font-barlow-condensed font-semibold uppercase tracking-wider text-base md:text-lg px-6 py-3">
                 Reviews ({product.totalReviews})
               </TabsTrigger>
             </TabsList>

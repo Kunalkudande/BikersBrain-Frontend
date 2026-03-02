@@ -24,7 +24,7 @@ export default function ShippingPolicy() {
                 <div className="bg-primary/10 rounded-xl p-4 text-center border border-primary/20">
                   <Truck className="mx-auto text-primary mb-2" size={24} />
                   <p className="text-sm font-semibold text-foreground">Free Shipping</p>
-                  <p className="text-xs text-muted-foreground">Orders above ₹999</p>
+                  <p className="text-xs text-muted-foreground">Orders above ₹2,999</p>
                 </div>
                 <div className="bg-primary/10 rounded-xl p-4 text-center border border-primary/20">
                   <Package className="mx-auto text-primary mb-2" size={24} />
@@ -39,7 +39,7 @@ export default function ShippingPolicy() {
               </div>
 
               <h2 className="text-lg font-semibold text-foreground">1. Shipping Charges</h2>
-              <p>Orders above ₹999 qualify for free shipping. For orders below ₹999, a flat shipping fee of ₹99 is charged.</p>
+              <p>Orders above ₹2,999 qualify for free shipping. For orders below ₹2,999, a flat shipping fee of ₹99 is charged.</p>
 
               <h2 className="text-lg font-semibold text-foreground">2. Delivery Timeframes</h2>
               <ul className="list-disc pl-5 space-y-1">

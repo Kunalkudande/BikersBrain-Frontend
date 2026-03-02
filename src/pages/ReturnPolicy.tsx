@@ -23,8 +23,8 @@ export default function ReturnPolicy() {
               <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-start gap-3">
                 <RotateCcw className="text-green-400 flex-shrink-0 mt-0.5" size={20} />
                 <div>
-                  <p className="font-semibold text-green-400">7-Day Easy Returns</p>
-                  <p className="text-sm text-green-400/70">We offer hassle-free returns within 7 days of delivery. No questions asked.</p>
+                  <p className="font-semibold text-green-400">3-Day Easy Returns</p>
+                  <p className="text-sm text-green-400/70">We offer hassle-free returns within 3 days of delivery. No questions asked.</p>
                 </div>
               </div>
 
@@ -36,7 +36,7 @@ export default function ReturnPolicy() {
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
-                  <span>Return request must be raised within 7 days of delivery</span>
+                  <span>Return request must be raised within 3 days of delivery</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
@@ -76,7 +76,7 @@ export default function ReturnPolicy() {
                   <p className="font-semibold text-amber-400">Need Help?</p>
                   <p className="text-sm text-amber-400/70">
                     Contact us at{" "}
-                    <a href="mailto:support@bikersbrain.in" className="underline">
+                    <a href="mailto:bikersbrain.official@gmail.com" className="underline">
                       support@bikersbrain.in
                     </a>{" "}
                     or visit our{" "}

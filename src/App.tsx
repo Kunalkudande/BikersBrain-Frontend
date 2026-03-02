@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
+import { WishlistProvider } from "@/hooks/useWishlist";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Eager-load the homepage for fastest first paint
@@ -71,7 +72,8 @@ const App = () => (
     <ErrorBoundary isOuterBoundary>
       <AuthProvider>
         <CartProvider>
-          <TooltipProvider>
+          <WishlistProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -115,7 +117,8 @@ const App = () => (
                 </Suspense>
               </ErrorBoundary>
             </BrowserRouter>
-          </TooltipProvider>
+            </TooltipProvider>
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </ErrorBoundary>
