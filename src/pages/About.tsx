@@ -58,11 +58,11 @@ export default function About() {
                 </p>
               </div>
             </div>
-            <div className="bg-card rounded-lg border border-border overflow-hidden aspect-video">
+            <div className="bg-card rounded-xl border border-border overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=500&fit=crop"
-                alt="Motorcycle rider"
-                className="w-full h-full object-cover"
+                src="/store-image.png"
+                alt="Shree Om Automobiles — BikersBrain Store"
+                className="w-full h-auto object-contain block"
                 loading="lazy"
               />
             </div>
