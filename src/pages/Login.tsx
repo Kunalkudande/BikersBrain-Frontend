@@ -51,7 +51,7 @@ export default function Login() {
             </h1>
           </Link>
           <p className="text-muted-foreground text-lg font-barlow">
-            Premium motorcycle gear for riders who demand the best. Helmets, jackets, gloves, and accessories — all under one roof.
+            Your one-stop shop for two-wheeler spare parts, helmets, riding gear, oils &amp; accessories — all under one roof.
           </p>
         </div>
       </div>

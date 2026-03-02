@@ -74,13 +74,19 @@ export default function Contact() {
                 <div className="bg-card rounded-lg border border-border p-5">
                   <MapPin className="h-6 w-6 text-primary mb-2" />
                   <h3 className="font-semibold mb-1">Visit Us</h3>
-                  <p className="text-sm text-muted-foreground">BikersBrain HQ, Pune, Maharashtra, India</p>
+                  <a
+                    href="https://maps.app.goo.gl/BBhXSCq7Gr4uBQuFA"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-primary"
+                  >
+                    Shop No. 7, Highway Chowk, NDA Rd, Warje, Pune, Maharashtra 411058
+                  </a>
                 </div>
                 <div className="bg-card rounded-lg border border-border p-5">
                   <Clock className="h-6 w-6 text-primary mb-2" />
                   <h3 className="font-semibold mb-1">Working Hours</h3>
-                  <p className="text-sm text-muted-foreground">Mon–Sat: 10 AM – 7 PM</p>
-                  <p className="text-sm text-muted-foreground">Sun: Closed</p>
+                  <p className="text-sm text-muted-foreground">All Days: 09:00 AM – 09:00 PM</p>
                 </div>
               </div>
 

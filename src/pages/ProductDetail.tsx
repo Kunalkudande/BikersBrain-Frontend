@@ -523,7 +523,7 @@ export default function ProductDetail() {
                 </div>
                 <div className="flex items-center gap-2 text-xs">
                   <RotateCcw className="h-4 w-4 text-primary flex-shrink-0" />
-                  <span>30-Day Easy<br />Returns</span>
+                  <span>3-Day Easy<br />Returns</span>
                 </div>
               </div>
             </div>

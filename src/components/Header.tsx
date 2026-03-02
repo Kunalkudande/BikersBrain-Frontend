@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/bikersbrain_logo_only_brain.png";
-import { Search, ShoppingCart, User, Menu, X, ChevronDown, Heart, LogOut, LayoutDashboard, Phone, MapPin } from "lucide-react";
+import { Search, ShoppingCart, User, Menu, X, ChevronDown, ChevronRight, Heart, LogOut, LayoutDashboard, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,10 +11,21 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
 import { productsApi } from "@/lib/api";
 
+interface NavChild {
+  label: string;
+  href: string;
+}
+
+interface NavParent {
+  label: string;
+  href: string;
+  children?: NavChild[];
+}
+
 interface NavItem {
   label: string;
   href: string;
-  children?: { label: string; href: string }[];
+  children?: NavParent[];
 }
 
 const STATIC_NAV_FALLBACK: NavItem[] = [
@@ -53,6 +64,9 @@ const STATIC_NAV_FALLBACK: NavItem[] = [
   { label: "Sale", href: "/products?sale=true" },
 ];
 
+// Duration (ms) before submenu closes when mouse leaves
+const SUBMENU_DELAY = 150;
+
 const Header = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -61,37 +75,87 @@ const Header = () => {
   const wishlistCount = wishlistItems.length;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [mobileSubExpanded, setMobileSubExpanded] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [navItems, setNavItems] = useState<NavItem[]>(STATIC_NAV_FALLBACK);
   const searchRef = useRef<HTMLInputElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const submenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load categories and build nav groups dynamically
   useEffect(() => {
     productsApi.getCategories().then((res) => {
       if (!res.success || !Array.isArray(res.data) || res.data.length === 0) return;
-      const cats = res.data as { value: string; label: string; group: string }[];
+      const cats = res.data as { id: string; value: string; label: string; group: string; parentId: string | null; sortOrder: number; groupSortOrder: number }[];
 
-      // Group categories
-      const groupMap = new Map<string, { value: string; label: string }[]>();
-      for (const cat of cats) {
-        if (!groupMap.has(cat.group)) groupMap.set(cat.group, []);
-        groupMap.get(cat.group)!.push({ value: cat.value, label: cat.label });
+      // Separate top-level and child categories
+      const topLevel = cats.filter(c => !c.parentId);
+      const children = cats.filter(c => c.parentId);
+
+      // Build group map with top-level categories
+      const groupMap = new Map<string, { id: string; value: string; label: string; sortOrder: number }[]>();
+      const groupOrder = new Map<string, number>();
+      for (const cat of topLevel) {
+        if (!groupMap.has(cat.group)) {
+          groupMap.set(cat.group, []);
+          groupOrder.set(cat.group, cat.groupSortOrder);
+        }
+        groupMap.get(cat.group)!.push({ id: cat.id, value: cat.value, label: cat.label, sortOrder: cat.sortOrder });
       }
 
+      // Build parent-to-children map
+      const childMap = new Map<string, { value: string; label: string; sortOrder: number }[]>();
+      for (const ch of children) {
+        if (!childMap.has(ch.parentId!)) childMap.set(ch.parentId!, []);
+        childMap.get(ch.parentId!)!.push({ value: ch.value, label: ch.label, sortOrder: ch.sortOrder });
+      }
+
+      // Ensure child-only groups also appear
+      for (const ch of children) {
+        if (!groupMap.has(ch.group)) {
+          groupMap.set(ch.group, []);
+          groupOrder.set(ch.group, ch.groupSortOrder);
+        }
+      }
+
+      // Sort groups by groupSortOrder, then alphabetically
+      const sortedGroupNames = [...groupMap.keys()].sort((a, b) => {
+        const aO = groupOrder.get(a) ?? 0;
+        const bO = groupOrder.get(b) ?? 0;
+        return aO - bO || a.localeCompare(b);
+      });
+
       const dynamic: NavItem[] = [];
-      groupMap.forEach((items, group) => {
+      for (const group of sortedGroupNames) {
+        const items = groupMap.get(group)!.sort((a, b) => a.sortOrder - b.sortOrder);
+        const navParents: NavParent[] = [];
+
+        for (const item of items) {
+          const kids = childMap.get(item.id);
+          const navChildren: NavChild[] | undefined = kids
+            ? kids.sort((a, b) => a.sortOrder - b.sortOrder).map(k => ({ label: k.label, href: `/products?category=${k.value}` }))
+            : undefined;
+          navParents.push({ label: item.label, href: `/products?category=${item.value}`, children: navChildren });
+        }
+
+        // Include orphaned children as top-level in this group
+        const groupChildOnly = children.filter(c => c.group === group && !items.some(i => i.id === c.parentId));
+        for (const orphan of groupChildOnly.sort((a, b) => a.sortOrder - b.sortOrder)) {
+          navParents.push({ label: orphan.label, href: `/products?category=${orphan.value}` });
+        }
+
+        if (navParents.length === 0) continue;
+
         dynamic.push({
           label: group,
-          href: `/products?category=${items[0].value}`,
-          children: items.map((c) => ({
-            label: c.label,
-            href: `/products?category=${c.value}`,
-          })),
+          href: `/products?category=${navParents[0].href.split('=')[1]}`,
+          children: navParents,
         });
-      });
+      }
 
       // Add static items at the end
       dynamic.push({ label: "Brands", href: "/products" });
@@ -136,7 +200,7 @@ const Header = () => {
               <span>+91 97621 63742</span>
             </a>
             <a
-              href="https://maps.app.goo.gl/cZGDyZeaLnpwBPzg6"
+              href="https://maps.app.goo.gl/BBhXSCq7Gr4uBQuFA"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-1 hover:opacity-80 transition whitespace-nowrap"
@@ -179,7 +243,7 @@ const Header = () => {
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl">
             <div className="relative w-full">
               <Input
-                placeholder="Search helmets, jackets, parts..."
+                placeholder="Search parts, helmets, oils, accessories..."
                 className="bg-secondary border-none pr-10 h-10 text-foreground placeholder:text-muted-foreground"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -248,13 +312,15 @@ const Header = () => {
                     className="absolute right-0 top-full mt-2 bg-card border border-border rounded-xl shadow-2xl w-56 overflow-hidden z-50"
                   >
                     {/* User info header */}
-                    <div className="flex items-center gap-3 px-4 py-3.5 bg-secondary/50 border-b border-border">
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold flex-shrink-0">
+                    <div className="flex items-center gap-3 px-4 py-3.5 bg-secondary border-b border-border">
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-base font-bold flex-shrink-0">
                         {(user?.fullName || "U").charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate">{user?.fullName}</p>
-                        <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{user?.fullName || "User"}</p>
+                        {user?.email && (
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        )}
                       </div>
                     </div>
 
@@ -340,7 +406,7 @@ const Header = () => {
                 <div className="relative">
                   <Input
                     ref={searchRef}
-                    placeholder="Search helmets, jackets, parts..."
+                    placeholder="Search parts, helmets, oils, accessories..."
                     className="bg-secondary border-none pr-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -364,8 +430,8 @@ const Header = () => {
               <li
                 key={item.label}
                 className="relative"
-                onMouseEnter={() => setActiveDropdown(item.label)}
-                onMouseLeave={() => setActiveDropdown(null)}
+                onMouseEnter={() => { setActiveDropdown(item.label); setActiveSubmenu(null); if (submenuTimer.current) clearTimeout(submenuTimer.current); }}
+                onMouseLeave={() => { setActiveDropdown(null); setActiveSubmenu(null); if (submenuTimer.current) clearTimeout(submenuTimer.current); }}
               >
                 <Link
                   to={item.href}
@@ -380,18 +446,66 @@ const Header = () => {
                   <motion.div
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full left-0 bg-card border border-border rounded-md shadow-xl min-w-[200px] py-2 z-50"
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 flex z-50"
                   >
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.label}
-                        to={child.href}
-                        className="block px-4 py-2 text-sm text-foreground hover:bg-secondary hover:text-primary transition-colors"
-                        onClick={() => setActiveDropdown(null)}
+                    {/* Left panel — parent categories */}
+                    <div className="bg-card border border-border rounded-l-lg shadow-xl min-w-[240px] py-2">
+                      {item.children.map((parent) => {
+                        const hasKids = parent.children && parent.children.length > 0;
+                        const isActive = activeSubmenu === parent.label;
+                        return (
+                          <div
+                            key={parent.href}
+                            className="relative"
+                            onMouseEnter={() => {
+                              if (submenuTimer.current) clearTimeout(submenuTimer.current);
+                              setActiveSubmenu(parent.label);
+                            }}
+                            onMouseLeave={() => {
+                              submenuTimer.current = setTimeout(() => setActiveSubmenu(null), SUBMENU_DELAY);
+                            }}
+                          >
+                            <Link
+                              to={parent.href}
+                              className={cn(
+                                "flex items-center justify-between px-5 py-2.5 text-sm transition-colors",
+                                isActive ? "bg-secondary text-primary" : "text-foreground hover:bg-secondary/60 hover:text-primary"
+                              )}
+                              onClick={() => { setActiveDropdown(null); setActiveSubmenu(null); }}
+                            >
+                              <span className="font-medium">{parent.label}</span>
+                              {hasKids && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+                            </Link>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Right panel — child categories (shown when parent is hovered) */}
+                    {item.children.some(p => p.label === activeSubmenu && p.children?.length) && (
+                      <motion.div
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.12 }}
+                        className="bg-card border border-l-0 border-border rounded-r-lg shadow-xl min-w-[220px] py-2"
+                        onMouseEnter={() => { if (submenuTimer.current) clearTimeout(submenuTimer.current); }}
+                        onMouseLeave={() => { submenuTimer.current = setTimeout(() => setActiveSubmenu(null), SUBMENU_DELAY); }}
                       >
-                        {child.label}
-                      </Link>
-                    ))}
+                        {item.children
+                          .find(p => p.label === activeSubmenu)
+                          ?.children?.map((child) => (
+                            <Link
+                              key={child.href}
+                              to={child.href}
+                              className="block px-5 py-2.5 text-sm text-foreground hover:bg-secondary hover:text-primary transition-colors"
+                              onClick={() => { setActiveDropdown(null); setActiveSubmenu(null); }}
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
               </li>
@@ -411,16 +525,90 @@ const Header = () => {
           >
             <div className="container mx-auto px-4 py-4 space-y-1">
               {navItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`block px-3 py-2.5 text-sm font-barlow-condensed font-semibold tracking-wider uppercase hover:text-primary transition-colors ${
-                    item.label === "Sale" ? "text-primary" : "text-foreground"
-                  }`}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                </Link>
+                <div key={item.label}>
+                  <button
+                    className={`flex items-center justify-between w-full px-3 py-2.5 text-sm font-barlow-condensed font-semibold tracking-wider uppercase transition-colors ${
+                      item.label === "Sale" ? "text-primary" : "text-foreground"
+                    }`}
+                    onClick={() => {
+                      if (!item.children) {
+                        navigate(item.href);
+                        setMobileOpen(false);
+                        return;
+                      }
+                      setMobileExpanded(mobileExpanded === item.label ? null : item.label);
+                      setMobileSubExpanded(null);
+                    }}
+                  >
+                    <span>{item.label}</span>
+                    {item.children && (
+                      <ChevronDown className={cn("h-4 w-4 transition-transform", mobileExpanded === item.label && "rotate-180")} />
+                    )}
+                  </button>
+                  {/* Expanded parent list */}
+                  <AnimatePresence>
+                    {item.children && mobileExpanded === item.label && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pl-4 pb-2 space-y-0.5">
+                          {item.children.map((parent) => (
+                            <div key={parent.href}>
+                              {parent.children && parent.children.length > 0 ? (
+                                <>
+                                  <button
+                                    className={cn(
+                                      "flex items-center justify-between w-full px-3 py-2 text-sm transition-colors rounded-md",
+                                      mobileSubExpanded === parent.label ? "text-primary bg-secondary" : "text-muted-foreground hover:bg-secondary/60 hover:text-primary"
+                                    )}
+                                    onClick={() => setMobileSubExpanded(mobileSubExpanded === parent.label ? null : parent.label)}
+                                  >
+                                    <span>{parent.label}</span>
+                                    <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", mobileSubExpanded === parent.label && "rotate-90")} />
+                                  </button>
+                                  <AnimatePresence>
+                                    {mobileSubExpanded === parent.label && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="pl-5 pb-1 space-y-0.5">
+                                          {parent.children.map((child) => (
+                                            <Link
+                                              key={child.href}
+                                              to={child.href}
+                                              className="block px-3 py-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                                              onClick={() => { setMobileOpen(false); setMobileExpanded(null); setMobileSubExpanded(null); }}
+                                            >
+                                              {child.label}
+                                            </Link>
+                                          ))}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </>
+                              ) : (
+                                <Link
+                                  to={parent.href}
+                                  className="block px-3 py-2 text-sm text-muted-foreground hover:bg-secondary/60 hover:text-primary rounded-md transition-colors"
+                                  onClick={() => { setMobileOpen(false); setMobileExpanded(null); }}
+                                >
+                                  {parent.label}
+                                </Link>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               ))}
               <div className="h-px bg-border my-2" />
               {isAuthenticated ? (

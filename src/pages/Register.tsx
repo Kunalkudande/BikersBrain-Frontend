@@ -78,7 +78,7 @@ export default function Register() {
             </h1>
           </Link>
           <p className="text-muted-foreground text-lg font-barlow">
-            Join the community of passionate riders. Get access to exclusive deals, wishlists, order tracking, and more.
+            Join the community of two-wheeler enthusiasts. Get access to exclusive deals, wishlists, order tracking, and more.
           </p>
         </div>
       </div>

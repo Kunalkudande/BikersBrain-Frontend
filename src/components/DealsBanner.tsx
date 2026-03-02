@@ -19,7 +19,7 @@ const DealsBanner = () => {
             Up to <span className="text-primary">50% Off</span>
           </h2>
           <p className="text-muted-foreground text-lg mb-6 max-w-md mx-auto">
-            Massive clearance on last season's top gear. Don't miss out.
+            Massive clearance on spare parts, gear &amp; accessories. Don't miss out.
           </p>
           <Button size="lg" className="font-barlow-condensed font-semibold tracking-wider uppercase" asChild>
             <Link to="/products?sale=true">Shop Deals</Link>

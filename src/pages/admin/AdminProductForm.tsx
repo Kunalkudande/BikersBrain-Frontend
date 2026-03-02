@@ -10,51 +10,136 @@ import {
 } from "lucide-react";
 
 /* ── Constants ── */
-const CATEGORY_GROUPS = [
-  {
-    group: "Helmets",
-    items: [
-      { value: "FULL_FACE",  label: "Full Face",  desc: "Complete head & chin protection" },
-      { value: "HALF_FACE",  label: "Half Face",  desc: "Open face with chin bar" },
-      { value: "OPEN_FACE",  label: "Open Face",  desc: "Three-quarter coverage" },
-      { value: "MODULAR",    label: "Modular",    desc: "Flip-up chin bar" },
-      { value: "OFF_ROAD",   label: "Off Road",   desc: "Dirt & adventure riding" },
-      { value: "KIDS",       label: "Kids",        desc: "Junior helmets" },
-      { value: "LADIES",     label: "Ladies",     desc: "Designed for women riders" },
-    ],
-  },
-  {
-    group: "Riding Gear",
-    items: [
-      { value: "JACKETS",     label: "Jackets",      desc: "Riding & textile jackets" },
-      { value: "GLOVES",      label: "Gloves",       desc: "Riding gloves" },
-      { value: "BOOTS",       label: "Boots",        desc: "Riding boots & shoes" },
-      { value: "RIDING_PANTS",label: "Riding Pants", desc: "Textile & leather pants" },
-    ],
-  },
-  {
-    group: "Accessories & More",
-    items: [
-      { value: "ACCESSORIES", label: "Accessories",  desc: "Gear add-ons & misc" },
-      { value: "PARTS",       label: "Parts",        desc: "Bike parts & components" },
-      { value: "LUGGAGE",     label: "Luggage",      desc: "Bags, panniers & backpacks" },
-      { value: "ELECTRONICS", label: "Electronics",  desc: "Intercoms, cameras & more" },
-    ],
-  },
-];
-// Flat array for lookups
-const CATEGORIES = CATEGORY_GROUPS.flatMap((g) => g.items);
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "FREE_SIZE"] as const;
-
-const CERTIFICATIONS = ["ISI", "DOT", "ECE 22.05", "ECE 22.06", "SNELL", "FIM", "SHARP 5-Star"];
-const MATERIALS = ["ABS", "Polycarbonate", "Fiberglass", "Carbon Fiber", "Kevlar Composite", "Thermoplastic"];
-const VISOR_TYPES = ["Clear", "Tinted", "Smoke", "Iridium", "Pinlock Ready", "Anti-fog", "Double Visor", "None"];
 
 const COMMON_COLORS = [
   "Matt Black", "Gloss Black", "White", "Red", "Blue", "Yellow",
   "Orange", "Green", "Grey", "Silver", "Fluo Yellow", "Fluo Orange",
 ];
+
+/* ── Category-aware specs config ── */
+interface SpecConfig {
+  title: string;
+  desc: string;
+  weightLabel: string;
+  weightPlaceholder: string;
+  materialLabel: string;
+  materials: string[];
+  visorLabel: string;
+  visorOptions: string[];
+  showVisor: boolean;
+  ventilationLabel: string;
+  showVentilation: boolean;
+  certLabel: string;
+  certifications: string[];
+}
+
+const SPEC_CONFIGS: Record<string, SpecConfig> = {
+  Helmets: {
+    title: "Helmet Specifications",
+    desc: "Safety ratings, shell & visor details",
+    weightLabel: "Weight",
+    weightPlaceholder: "e.g. 1.2 kg",
+    materialLabel: "Shell Material",
+    materials: ["ABS", "Polycarbonate", "Fiberglass", "Carbon Fiber", "Kevlar Composite", "Thermoplastic"],
+    visorLabel: "Visor Type",
+    visorOptions: ["Clear", "Tinted", "Smoke", "Iridium", "Pinlock Ready", "Anti-fog", "Double Visor", "None"],
+    showVisor: true,
+    ventilationLabel: "Ventilation",
+    showVentilation: true,
+    certLabel: "Certifications",
+    certifications: ["ISI", "DOT", "ECE 22.05", "ECE 22.06", "SNELL", "FIM", "SHARP 5-Star"],
+  },
+  "Riding Gear": {
+    title: "Gear Specifications",
+    desc: "Material, protection & fit details",
+    weightLabel: "Weight",
+    weightPlaceholder: "e.g. 650g",
+    materialLabel: "Material",
+    materials: ["Leather", "Textile", "Mesh", "Cordura", "Polyester", "Nylon", "Kevlar", "Gore-Tex", "Drystar"],
+    visorLabel: "Protection Level",
+    visorOptions: ["CE Level 1", "CE Level 2", "D3O", "Knox", "SAS-TEC", "Foam", "None"],
+    showVisor: true,
+    ventilationLabel: "Waterproof",
+    showVentilation: true,
+    certLabel: "Certifications & Standards",
+    certifications: ["CE", "EN 13594", "EN 13595", "EN 17092", "EN 13634"],
+  },
+  Oil: {
+    title: "Oil Specifications",
+    desc: "Grade, volume & engine compatibility",
+    weightLabel: "Volume",
+    weightPlaceholder: "e.g. 1L / 500ml",
+    materialLabel: "Oil Type",
+    materials: ["Mineral", "Semi-Synthetic", "Fully Synthetic", "Gear Oil", "Fork Oil", "Chain Lube", "Coolant"],
+    visorLabel: "Viscosity Grade",
+    visorOptions: ["10W-30", "10W-40", "10W-50", "15W-40", "15W-50", "20W-40", "20W-50", "5W-40", "75W-90", "80W-90", "N/A"],
+    showVisor: true,
+    ventilationLabel: "Suitable for 4-Stroke",
+    showVentilation: true,
+    certLabel: "API / JASO Standards",
+    certifications: ["JASO MA", "JASO MA2", "JASO MB", "API SL", "API SN", "API SM", "API SG"],
+  },
+  "Spare Parts": {
+    title: "Part Specifications",
+    desc: "Compatibility & technical details",
+    weightLabel: "Weight",
+    weightPlaceholder: "e.g. 350g",
+    materialLabel: "Material",
+    materials: ["Steel", "Aluminium", "Rubber", "Plastic", "Carbon Fiber", "Brass", "Chrome", "Cast Iron"],
+    visorLabel: "Fitment",
+    visorOptions: [],
+    showVisor: false,
+    ventilationLabel: "OEM Compatible",
+    showVentilation: true,
+    certLabel: "Standards",
+    certifications: ["OEM", "Aftermarket", "ISO Certified"],
+  },
+  "Luggage & Touring": {
+    title: "Luggage Specifications",
+    desc: "Capacity, mounting & weather protection",
+    weightLabel: "Weight",
+    weightPlaceholder: "e.g. 1.5 kg",
+    materialLabel: "Material",
+    materials: ["Nylon", "Polyester", "Cordura", "Semi-Hard", "Hard Case", "Aluminium", "Canvas", "PVC"],
+    visorLabel: "Capacity",
+    visorOptions: ["5-10L", "10-20L", "20-30L", "30-40L", "40-50L", "50L+"],
+    showVisor: true,
+    ventilationLabel: "Waterproof",
+    showVentilation: true,
+    certLabel: "Features",
+    certifications: ["Reflective", "Rain Cover Included", "Quick Release", "Lockable", "Expandable"],
+  },
+};
+
+const DEFAULT_SPEC_CONFIG: SpecConfig = {
+  title: "Product Specifications",
+  desc: "Technical details & features",
+  weightLabel: "Weight / Dimensions",
+  weightPlaceholder: "e.g. 500g / 20x10x5 cm",
+  materialLabel: "Material",
+  materials: ["Plastic", "Metal", "Rubber", "Leather", "Nylon", "Silicon", "Glass", "Carbon Fiber"],
+  visorLabel: "Type / Variant",
+  visorOptions: [],
+  showVisor: false,
+  ventilationLabel: "Premium Quality",
+  showVentilation: true,
+  certLabel: "Certifications",
+  certifications: ["CE", "ISO", "OEM", "RoHS"],
+};
+
+/** Find the best spec config for a given group name */
+function getSpecConfig(group: string): SpecConfig {
+  // Exact match
+  if (SPEC_CONFIGS[group]) return SPEC_CONFIGS[group];
+  // Fuzzy match (e.g. "Accessories & More" → default, "Helmets" → Helmets)
+  const lower = group.toLowerCase();
+  for (const [key, config] of Object.entries(SPEC_CONFIGS)) {
+    if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) return config;
+  }
+  return DEFAULT_SPEC_CONFIG;
+}
 
 /* ── Types ── */
 interface VariantRow { id: string; size: string; color: string; stock: string; additionalPrice: string; }
@@ -140,25 +225,46 @@ export default function AdminProductForm() {
 
   /* ── Dynamic categories from DB ── */
   const [apiCategories, setApiCategories] = useState<{
-    id: string; value: string; label: string; group: string; description: string | null; isActive: boolean;
+    id: string; value: string; label: string; group: string; description: string | null;
+    isActive: boolean; parentId: string | null; sortOrder: number; groupSortOrder: number;
   }[]>([]);
 
   useEffect(() => {
     adminApi.getCategories()
       .then((res) => setApiCategories(((res as any).data || []).filter((c: any) => c.isActive)))
-      .catch(() => {/* falls back to hardcoded CATEGORIES */});
+      .catch(() => {});
   }, []);
 
-  // Build grouped structure from API (fall back to hardcoded if empty)
-  const categoryGroups = apiCategories.length > 0
-    ? Object.entries(
-        apiCategories.reduce<Record<string, typeof apiCategories>>((acc, c) => {
-          if (!acc[c.group]) acc[c.group] = [];
-          acc[c.group].push(c);
-          return acc;
-        }, {})
-      ).map(([group, items]) => ({ group, items }))
-    : CATEGORY_GROUPS;
+  // Build grouped structure from API with nesting support
+  const categoryGroups = (() => {
+    if (apiCategories.length === 0) return [];
+    const grouped: Record<string, typeof apiCategories> = {};
+    const groupSortMap: Record<string, number> = {};
+    for (const c of apiCategories) {
+      if (!grouped[c.group]) { grouped[c.group] = []; groupSortMap[c.group] = c.groupSortOrder; }
+      grouped[c.group].push(c);
+    }
+    return Object.entries(grouped)
+      .sort(([a], [b]) => (groupSortMap[a] ?? 0) - (groupSortMap[b] ?? 0) || a.localeCompare(b))
+      .map(([group, items]) => {
+        // Build tree: top-level then children indented
+        const topLevel = items.filter(c => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+        const childMap = new Map<string, typeof items>();
+        for (const c of items.filter(c => c.parentId)) {
+          if (!childMap.has(c.parentId!)) childMap.set(c.parentId!, []);
+          childMap.get(c.parentId!)!.push(c);
+        }
+        const flat: { value: string; label: string; description: string | null; depth: number }[] = [];
+        for (const p of topLevel) {
+          flat.push({ value: p.value, label: p.label, description: p.description, depth: 0 });
+          const kids = childMap.get(p.id);
+          if (kids) for (const k of kids.sort((a, b) => a.sortOrder - b.sortOrder)) {
+            flat.push({ value: k.value, label: k.label, description: k.description, depth: 1 });
+          }
+        }
+        return { group, items: flat };
+      });
+  })();
 
   /* ── Load existing product for edit ── */
   const [productId, setProductId] = useState<string | null>(null);
@@ -167,7 +273,18 @@ export default function AdminProductForm() {
   /* ── Form state ── */
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
-  const [category, setCategory] = useState("FULL_FACE");
+  const [category, setCategory] = useState("");
+
+  // Find the group for the currently selected category
+  const selectedGroup = (() => {
+    for (const g of categoryGroups) {
+      if (g.items.some(c => c.value === category)) return g.group;
+    }
+    return "";
+  })();
+
+  // Get the spec config for the current category's group
+  const specConfig = getSpecConfig(selectedGroup);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
@@ -200,7 +317,7 @@ export default function AdminProductForm() {
         setProductId(p.id);
         setName(p.name || "");
         setBrand(p.brand || "");
-        setCategory(p.category || "FULL_FACE");
+        setCategory(p.category || "");
         setDescription(p.description || "");
         setPrice(p.price ? String(Number(p.price)) : "");
         setDiscountPrice(p.discountPrice ? String(Number(p.discountPrice)) : "");
@@ -537,27 +654,28 @@ export default function AdminProductForm() {
                 <Field label="Product Name *" error={errors.name}>
                   <input value={name} onChange={(e) => setName(e.target.value)}
                     className={inputCls(!!errors.name)}
-                    placeholder="e.g. Steelbird SBA-1 Classic Helmet" />
+                    placeholder="e.g. Product name" />
                 </Field>
               </div>
 
               <Field label="Brand *" error={errors.brand}>
                 <input value={brand} onChange={(e) => setBrand(e.target.value)}
-                  className={inputCls(!!errors.brand)} placeholder="e.g. Steelbird" />
+                  className={inputCls(!!errors.brand)} placeholder="e.g. Brand name" />
               </Field>
 
               <Field label="SKU *" error={errors.sku}>
                 <input value={sku} onChange={(e) => setSku(e.target.value)}
-                  className={inputCls(!!errors.sku)} placeholder="e.g. SBA-001-BLK" />
+                  className={inputCls(!!errors.sku)} placeholder="e.g. PRD-001-BLK" />
               </Field>
 
               <Field label="Category *" error={errors.category}>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls(!!errors.category)}>
+                  <option value="">Select a category...</option>
                   {categoryGroups.map((g) => (
                     <optgroup key={g.group} label={`── ${g.group} ──`}>
                       {g.items.map((c) => (
                         <option key={c.value} value={c.value}>
-                          {c.label}{c.description ? ` — ${c.description}` : ""}
+                          {c.depth > 0 ? "↳ " : ""}{c.label}{c.description ? ` — ${c.description}` : ""}
                         </option>
                       ))}
                     </optgroup>
@@ -661,85 +779,106 @@ export default function AdminProductForm() {
 
         {/* ──────── SPECIFICATIONS ──────── */}
         {activeTab === "specs" && (
-          <Section icon={Settings2} title="Specifications" desc="Technical helmet details">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <Field label="Weight">
-                <input value={specs.weight} onChange={(e) => setSpecs({ ...specs, weight: e.target.value })}
-                  className={inputCls()} placeholder="e.g. 1.2 kg" />
-              </Field>
-
-              <Field label="Shell Material">
-                <select value={specs.material} onChange={(e) => setSpecs({ ...specs, material: e.target.value })}
-                  className={inputCls()}>
-                  <option value="">Select material...</option>
-                  {MATERIALS.map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </Field>
-
-              <Field label="Visor Type">
-                <select value={specs.visorType} onChange={(e) => setSpecs({ ...specs, visorType: e.target.value })}
-                  className={inputCls()}>
-                  <option value="">Select visor...</option>
-                  {VISOR_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </Field>
-
-              <Field label="Ventilation">
-                <div className="flex items-center gap-3 h-[42px]">
-                  <button
-                    type="button"
-                    onClick={() => setSpecs({ ...specs, ventilation: true })}
-                    className={cn(
-                      "flex-1 py-2 rounded-xl text-sm font-medium border transition",
-                      specs.ventilation
-                        ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                        : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/15"
-                    )}
-                  >Yes</button>
-                  <button
-                    type="button"
-                    onClick={() => setSpecs({ ...specs, ventilation: false })}
-                    className={cn(
-                      "flex-1 py-2 rounded-xl text-sm font-medium border transition",
-                      !specs.ventilation
-                        ? "bg-red-500/15 border-red-500/30 text-red-400"
-                        : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/15"
-                    )}
-                  >No</button>
-                </div>
-              </Field>
-
-              {/* Certifications */}
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-                  Certifications
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {CERTIFICATIONS.map((c) => {
-                    const active = specs.certifications.includes(c);
-                    return (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setSpecs((prev) => ({
-                          ...prev,
-                          certifications: active
-                            ? prev.certifications.filter((x) => x !== c)
-                            : [...prev.certifications, c],
-                        }))}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-xs font-semibold border transition",
-                          active
-                            ? "bg-orange-500/15 border-orange-500/30 text-orange-400"
-                            : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/20 hover:text-white/50"
-                        )}
-                      >
-                        {c}
-                      </button>
-                    );
-                  })}
-                </div>
+          <Section icon={Settings2} title={specConfig.title} desc={specConfig.desc}>
+            {!selectedGroup && (
+              <div className="mt-4 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm text-amber-400">
+                Select a category first to see relevant specification fields.
               </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <Field label={specConfig.weightLabel}>
+                <input value={specs.weight} onChange={(e) => setSpecs({ ...specs, weight: e.target.value })}
+                  className={inputCls()} placeholder={specConfig.weightPlaceholder} />
+              </Field>
+
+              <Field label={specConfig.materialLabel}>
+                {specConfig.materials.length > 0 ? (
+                  <select value={specs.material} onChange={(e) => setSpecs({ ...specs, material: e.target.value })}
+                    className={inputCls()}>
+                    <option value="">Select {specConfig.materialLabel.toLowerCase()}...</option>
+                    {specConfig.materials.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                ) : (
+                  <input value={specs.material} onChange={(e) => setSpecs({ ...specs, material: e.target.value })}
+                    className={inputCls()} placeholder={`Enter ${specConfig.materialLabel.toLowerCase()}`} />
+                )}
+              </Field>
+
+              {specConfig.showVisor && (
+                <Field label={specConfig.visorLabel}>
+                  {specConfig.visorOptions.length > 0 ? (
+                    <select value={specs.visorType} onChange={(e) => setSpecs({ ...specs, visorType: e.target.value })}
+                      className={inputCls()}>
+                      <option value="">Select...</option>
+                      {specConfig.visorOptions.map((v) => <option key={v} value={v}>{v}</option>)}
+                    </select>
+                  ) : (
+                    <input value={specs.visorType} onChange={(e) => setSpecs({ ...specs, visorType: e.target.value })}
+                      className={inputCls()} placeholder={`Enter ${specConfig.visorLabel.toLowerCase()}`} />
+                  )}
+                </Field>
+              )}
+
+              {specConfig.showVentilation && (
+                <Field label={specConfig.ventilationLabel}>
+                  <div className="flex items-center gap-3 h-[42px]">
+                    <button
+                      type="button"
+                      onClick={() => setSpecs({ ...specs, ventilation: true })}
+                      className={cn(
+                        "flex-1 py-2 rounded-xl text-sm font-medium border transition",
+                        specs.ventilation
+                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                          : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/15"
+                      )}
+                    >Yes</button>
+                    <button
+                      type="button"
+                      onClick={() => setSpecs({ ...specs, ventilation: false })}
+                      className={cn(
+                        "flex-1 py-2 rounded-xl text-sm font-medium border transition",
+                        !specs.ventilation
+                          ? "bg-red-500/15 border-red-500/30 text-red-400"
+                          : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/15"
+                      )}
+                    >No</button>
+                  </div>
+                </Field>
+              )}
+
+              {/* Certifications / Standards */}
+              {specConfig.certifications.length > 0 && (
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
+                    {specConfig.certLabel}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {specConfig.certifications.map((c) => {
+                      const active = specs.certifications.includes(c);
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setSpecs((prev) => ({
+                            ...prev,
+                            certifications: active
+                              ? prev.certifications.filter((x) => x !== c)
+                              : [...prev.certifications, c],
+                          }))}
+                          className={cn(
+                            "px-3 py-1.5 rounded-lg text-xs font-semibold border transition",
+                            active
+                              ? "bg-orange-500/15 border-orange-500/30 text-orange-400"
+                              : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/20 hover:text-white/50"
+                          )}
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Features */}
               <div className="sm:col-span-2">
@@ -760,7 +899,7 @@ export default function AdminProductForm() {
                       }
                     }}
                     className={cn(inputCls(), "flex-1")}
-                    placeholder="e.g. Anti-scratch visor coating"
+                    placeholder="e.g. Add a key feature or highlight"
                   />
                   <button
                     type="button"

@@ -77,7 +77,7 @@ export default function ReturnPolicy() {
                   <p className="text-sm text-amber-400/70">
                     Contact us at{" "}
                     <a href="mailto:bikersbrain.official@gmail.com" className="underline">
-                      support@bikersbrain.in
+                      bikersbrain.official@gmail.com
                     </a>{" "}
                     or visit our{" "}
                     <Link to="/contact" className="underline">

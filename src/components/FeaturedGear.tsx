@@ -29,10 +29,8 @@ interface Category {
   value: string;
   label: string;
   group: string;
+  groupSortOrder?: number;
 }
-
-/* Groups to show (in order) */
-const GROUP_ORDER = ["Helmets", "Spare Parts", "Oil", "Accessories"];
 
 const PLACEHOLDER =
   "https://placehold.co/400x400/1F2937/FF6B35?text=No+Image";
@@ -64,26 +62,27 @@ const FeaturedGear = () => {
   const allProducts: Product[] =
     (prodData?.data as { items?: Product[] })?.items ?? [];
 
-  /* ── Group products by category group ── */
+  /* ── Group products by category group (respecting admin sort order) ── */
   const groupToCatValues: Record<string, string[]> = {};
+  const groupSortOrderMap: Record<string, number> = {};
   for (const c of categories) {
     (groupToCatValues[c.group] ??= []).push(c.value);
+    if (groupSortOrderMap[c.group] === undefined) {
+      groupSortOrderMap[c.group] = c.groupSortOrder ?? 0;
+    }
   }
+
+  // Sort groups by groupSortOrder, then alphabetically
+  const sortedGroupNames = Object.keys(groupToCatValues).sort((a, b) => {
+    const aO = groupSortOrderMap[a] ?? 0;
+    const bO = groupSortOrderMap[b] ?? 0;
+    return aO - bO || a.localeCompare(b);
+  });
 
   const groupedProducts: { group: string; products: Product[] }[] = [];
-
-  for (const group of GROUP_ORDER) {
+  for (const group of sortedGroupNames) {
     const catValues = groupToCatValues[group];
     if (!catValues?.length) continue;
-    const products = allProducts.filter((p) => catValues.includes(p.category));
-    if (products.length === 0) continue;
-    groupedProducts.push({ group, products });
-  }
-
-  /* Include remaining groups */
-  const covered = new Set(GROUP_ORDER);
-  for (const [group, catValues] of Object.entries(groupToCatValues)) {
-    if (covered.has(group)) continue;
     const products = allProducts.filter((p) => catValues.includes(p.category));
     if (products.length === 0) continue;
     groupedProducts.push({ group, products });
@@ -192,8 +191,8 @@ const FeaturedGear = () => {
         {/* ── Loading state ── */}
         {isLoading && groupedProducts.length === 0 && (
           <div className="space-y-14">
-            {GROUP_ORDER.slice(0, 2).map((g) => (
-              <div key={g}>
+            {[1, 2].map((i) => (
+              <div key={i}>
                 <div className="h-7 w-40 bg-secondary rounded mb-6 animate-pulse" />
                 <SkeletonGrid />
               </div>

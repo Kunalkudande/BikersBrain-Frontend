@@ -42,8 +42,8 @@ const emptyForm = {
 };
 
 const BLOG_CATEGORIES = [
-  "General", "Helmet Guide", "Safety Tips", "Product Review",
-  "Riding Tips", "News", "Maintenance",
+  "General", "Buying Guide", "Safety Tips", "Product Review",
+  "Riding Tips", "News", "Maintenance", "Spare Parts",
 ];
 
 const inputCls =

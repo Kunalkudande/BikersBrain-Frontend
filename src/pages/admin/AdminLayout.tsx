@@ -17,6 +17,7 @@ import {
   Ticket,
   FileText,
   Eye,
+  Settings,
 } from "lucide-react";
 
 const NAV = [
@@ -28,6 +29,7 @@ const NAV = [
   { label: "Coupons",    href: "/admin/coupons",    icon: Ticket },
   { label: "Blog",       href: "/admin/blog",        icon: FileText },
   { label: "Visitors",   href: "/admin/visitors",   icon: Eye },
+  { label: "Settings",   href: "/admin/settings",   icon: Settings },
 ];
 
 export default function AdminLayout() {

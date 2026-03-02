@@ -322,6 +322,11 @@ export const newsletterApi = {
     request('/admin/newsletter/subscribe', { method: 'POST', body: JSON.stringify({ email }) }),
 };
 
+/* ─── Public Settings ─── */
+export const settingsApi = {
+  getPublic: () => request('/admin/settings/public'),
+};
+
 /* ─── Admin ─── */
 export const adminApi = {
   // Dashboard
@@ -387,6 +392,8 @@ export const adminApi = {
     request(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteCategory: (id: string) =>
     request(`/admin/categories/${id}`, { method: 'DELETE' }),
+  reorderCategories: (items: { id: string; sortOrder?: number; groupSortOrder?: number }[]) =>
+    request('/admin/categories/reorder', { method: 'PUT', body: JSON.stringify({ items }) }),
 
   // Coupons
   getCoupons: () => request('/admin/coupons'),
@@ -408,6 +415,11 @@ export const adminApi = {
 
   // Visitor analytics
   getVisitorStats: (days = 30) => request(`/admin/visitors?days=${days}`),
+
+  // Settings
+  getSettings: () => request('/admin/settings'),
+  updateSettings: (body: Record<string, string>) =>
+    request('/admin/settings', { method: 'PUT', body: JSON.stringify(body) }),
 };
 
 /* ─── Visitor Tracking ─── */

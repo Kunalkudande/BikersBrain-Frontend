@@ -31,7 +31,7 @@ const Newsletter = () => {
           Join the <span className="text-primary">Ride</span>
         </h2>
         <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Get exclusive deals, new arrivals & riding tips delivered to your inbox.
+          Get exclusive deals, new arrivals &amp; maintenance tips delivered to your inbox.
         </p>
         <form onSubmit={handleSubscribe} className="flex max-w-md mx-auto gap-2">
           <Input

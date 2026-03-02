@@ -1,6 +1,7 @@
 const brands = [
-  "Shoei", "Arai", "AGV", "Alpinestars", "Dainese", "Rev'It", "Icon", "Bell",
-  "HJC", "Scorpion", "TCX", "Sidi", "Akrapovic", "Yoshimura", "K&N",
+  "Shoei", "Arai", "AGV", "Alpinestars", "Dainese", "Rev'It", "Bell",
+  "HJC", "Motul", "Castrol", "NGK", "Bosch", "Akrapovic", "K&N",
+  "Yoshimura", "Denso", "Exide",
 ];
 
 const BrandSlider = () => {

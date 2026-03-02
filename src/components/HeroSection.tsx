@@ -31,7 +31,7 @@ const HeroSection = () => {
             <span className="text-primary">CONFIDENCE</span>
           </h2>
           <p className="text-muted-foreground text-lg mb-8 max-w-md">
-            Premium motorcycle gear, helmets, and accessories. Gear up with the best brands at unbeatable prices.
+            Spare parts, helmets, riding gear, engine oils &amp; accessories — everything your two-wheeler needs, at unbeatable prices.
           </p>
           <div className="flex gap-3">
             <Button size="lg" className="font-barlow-condensed font-semibold tracking-wider uppercase gap-2" asChild>

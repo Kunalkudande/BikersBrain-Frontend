@@ -43,7 +43,7 @@ export default function Products() {
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [brands, setBrands] = useState<string[]>([]);
-  const [categories, setCategories] = useState<{ value: string; label: string }[]>([]);
+  const [categories, setCategories] = useState<{ value: string; label: string; parentId?: string | null; id?: string; sortOrder?: number }[]>([]);
   const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -94,7 +94,7 @@ export default function Products() {
 
   useEffect(() => {
     productsApi.getCategories().then((res) => {
-      if (res.success) setCategories((res.data as { value: string; label: string }[]) || []);
+      if (res.success) setCategories((res.data as { value: string; label: string; parentId?: string | null; id?: string; sortOrder?: number }[]) || []);
     }).catch(() => {});
   }, []);
 
@@ -187,20 +187,44 @@ export default function Products() {
               {/* Category */}
               <div className="mb-6">
                 <label className="text-sm font-semibold font-barlow-condensed uppercase tracking-wider mb-3 block">Category</label>
-                <div className="space-y-2">
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.value}
-                      onClick={() => updateParams("category", category === cat.value ? "" : cat.value)}
-                      className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                        category === cat.value
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-secondary text-muted-foreground"
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
+                <div className="space-y-1">
+                  {(() => {
+                    // Build tree: top-level first, then children indented
+                    const topLevel = categories.filter(c => !c.parentId).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+                    const childMap = new Map<string, typeof categories>();
+                    for (const c of categories.filter(c => c.parentId)) {
+                      if (!childMap.has(c.parentId!)) childMap.set(c.parentId!, []);
+                      childMap.get(c.parentId!)!.push(c);
+                    }
+                    const items: { cat: typeof categories[0]; depth: number }[] = [];
+                    for (const p of topLevel) {
+                      items.push({ cat: p, depth: 0 });
+                      const kids = childMap.get(p.id || "");
+                      if (kids) {
+                        kids.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+                        for (const kid of kids) items.push({ cat: kid, depth: 1 });
+                      }
+                    }
+                    // Also add orphan children (parent not in list)
+                    const shownIds = new Set(items.map(i => i.cat.value));
+                    for (const c of categories.filter(c => c.parentId && !shownIds.has(c.value))) {
+                      items.push({ cat: c, depth: 1 });
+                    }
+                    return items.map(({ cat, depth }) => (
+                      <button
+                        key={cat.value}
+                        onClick={() => updateParams("category", category === cat.value ? "" : cat.value)}
+                        className={`block w-full text-left rounded-md text-sm transition-colors ${
+                          category === cat.value
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-secondary text-muted-foreground"
+                        } ${depth === 0 ? "px-3 py-2 font-medium" : "pl-7 pr-3 py-1.5 text-xs"}`}
+                      >
+                        {depth > 0 && <span className="text-muted-foreground/50 mr-1">›</span>}
+                        {cat.label}
+                      </button>
+                    ));
+                  })()}
                 </div>
               </div>
 

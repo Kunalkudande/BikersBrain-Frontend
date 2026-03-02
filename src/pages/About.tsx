@@ -4,12 +4,12 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const values = [
-  { icon: Shield, title: "100% Genuine", desc: "Every product is sourced directly from authorized distributors and brands." },
-  { icon: Award, title: "ISI & DOT Certified", desc: "We only stock helmets and gear meeting international safety standards." },
+  { icon: Shield, title: "100% Genuine", desc: "Every product is sourced directly from authorized distributors and trusted brands." },
+  { icon: Award, title: "Quality Assured", desc: "We stock only products that meet strict quality and safety standards." },
   { icon: Truck, title: "Fast Delivery", desc: "Pan-India delivery within 3-7 business days with real-time tracking." },
-  { icon: Users, title: "25,000+ Riders", desc: "A growing community of bikers trusting us with their safety gear." },
-  { icon: Wrench, title: "Expert Support", desc: "Our team of riders helps you pick the right gear for your ride." },
-  { icon: Star, title: "Easy Returns", desc: "30-day hassle-free return and exchange policy on all products." },
+  { icon: Users, title: "25,000+ Customers", desc: "A growing community of two-wheeler enthusiasts trusting us for their needs." },
+  { icon: Wrench, title: "Expert Support", desc: "Our team helps you find the right part or accessory for your ride." },
+  { icon: Star, title: "Easy Returns", desc: "3-day hassle-free return and exchange policy on all products." },
 ];
 
 export default function About() {
@@ -34,7 +34,7 @@ export default function About() {
               transition={{ delay: 0.1 }}
               className="text-muted-foreground max-w-2xl mx-auto text-lg"
             >
-              Born from a passion for motorcycles, BikersBrain is India's premium destination for riding gear. We believe every rider deserves top-quality equipment — without compromise.
+              Born from a passion for motorcycles, BikersBrain is India's go-to destination for two-wheeler spare parts, riding gear &amp; accessories. We believe every rider deserves genuine, top-quality products — without compromise.
             </motion.p>
           </div>
         </section>
@@ -48,13 +48,13 @@ export default function About() {
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  It started with a simple frustration — finding genuine, high-quality motorcycle gear in India was harder than it should be. Counterfeit products, inconsistent sizing, and unreliable sellers made every purchase a gamble.
+                  It started with a simple frustration — finding genuine two-wheeler spare parts and accessories in India was harder than it should be. Counterfeit products, unreliable sellers, and poor after-sales support made every purchase a gamble.
                 </p>
                 <p>
-                  In 2024, a group of avid motorcyclists decided to change that. BikersBrain was created to be the one-stop shop for everything a rider needs: from ISI-certified helmets and CE-rated jackets to premium gloves, boots, and accessories.
+                  In 2024, a group of passionate riders decided to change that. BikersBrain was created to be the one-stop shop for everything a two-wheeler needs: from helmets and riding gear to engine oils, brake pads, coils, and every spare part in between.
                 </p>
                 <p>
-                  We work directly with trusted brands — both Indian and international — to bring you authentic gear at competitive prices, backed by genuine warranty and hassle-free service.
+                  We work directly with trusted brands — both Indian and international — to bring you authentic products at competitive prices, backed by genuine warranty and hassle-free service.
                 </p>
               </div>
             </div>
@@ -100,7 +100,7 @@ export default function About() {
             Ride Safe. <span className="text-primary">Ride Smart.</span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto mb-6">
-            Whether you're commuting daily or touring cross-country, we've got the gear to keep you protected and stylish on every ride.
+            Whether you’re commuting daily or touring cross-country, we’ve got everything — from spare parts and oils to helmets and riding gear — to keep you and your bike in top shape.
           </p>
         </section>
       </main>

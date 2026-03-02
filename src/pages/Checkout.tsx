@@ -13,7 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useCart } from "@/hooks/useCart";
 import { useAuth } from "@/hooks/useAuth";
-import { ordersApi, userApi } from "@/lib/api";
+import { ordersApi, userApi, settingsApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { openRazorpayCheckout } from "@/lib/razorpay";
 
@@ -51,6 +51,7 @@ export default function Checkout() {
 
   // Shared
   const [paymentMethod, setPaymentMethod] = useState<"RAZORPAY" | "COD">("RAZORPAY");
+  const [codAvailable, setCodAvailable] = useState(true);
   const [couponCode, setCouponCode] = useState("");
   const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number } | null>(null);
   const [isPlacing, setIsPlacing] = useState(false);
@@ -138,6 +139,16 @@ export default function Checkout() {
       }).catch(() => {});
     }
   }, [cart, isAuthenticated, navigate]);
+
+  // Fetch COD availability from site settings
+  useEffect(() => {
+    settingsApi.getPublic().then((res) => {
+      if (res.data?.cod_enabled === "false") {
+        setCodAvailable(false);
+        setPaymentMethod("RAZORPAY");
+      }
+    }).catch(() => {});
+  }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items = cart?.items ?? [];
@@ -353,13 +364,15 @@ export default function Checkout() {
                 <label
                   className={`flex items-center gap-3 bg-card rounded-lg border p-4 cursor-pointer transition-colors ${
                     paymentMethod === "COD" ? "border-primary" : "border-border"
-                  }`}
+                  } ${!codAvailable ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  <RadioGroupItem value="COD" />
-                  <Wallet className="h-5 w-5 text-primary" />
+                  <RadioGroupItem value="COD" disabled={!codAvailable} />
+                  <Wallet className={`h-5 w-5 ${codAvailable ? "text-primary" : "text-muted-foreground"}`} />
                   <div>
                     <p className="font-semibold text-sm">Cash on Delivery</p>
-                    <p className="text-xs text-muted-foreground">Pay when you receive</p>
+                    <p className="text-xs text-muted-foreground">
+                      {codAvailable ? "Pay when you receive" : "Currently unavailable"}
+                    </p>
                   </div>
                 </label>
               </RadioGroup>

@@ -1,192 +1,261 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Facebook,
   Instagram,
-  Twitter,
   Youtube,
   Phone,
   Mail,
   MapPin,
   Clock,
-  ShieldCheck,
-  Truck,
-  RotateCcw,
-  CreditCard,
+  Send,
+  ExternalLink,
 } from "lucide-react";
 import logo from "@/assets/bikersbrain_logo_only_brain.png";
+import { newsletterApi } from "@/lib/api";
 
-const CONTACT_INFO = {
+const CONTACT = {
   email: "bikersbrain.official@gmail.com",
   phone: "+91 97621 63742",
-  address: "Pune, Maharashtra, India",
-  workingHours: "Mon-Sat: 9AM – 8PM",
+  address: "Shop No. 7, Highway Chowk, NDA Rd, Warje, Pune, Maharashtra 411058",
+  mapLink: "https://maps.app.goo.gl/BBhXSCq7Gr4uBQuFA",
+};
+
+const SOCIALS = [
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/shree_om_automobiles",
+    Icon: Instagram,
+    color: "hover:text-pink-500",
+  },
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/channel/UCsXWMuXV_458D_J3I_UUOJw",
+    Icon: Youtube,
+    color: "hover:text-red-500",
+  },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/shreeomauto",
+    Icon: Facebook,
+    color: "hover:text-blue-500",
+  },
+];
+
+const USEFUL_LINKS = [
+  { label: "Shipping Policy", href: "/shipping-policy" },
+  { label: "Terms & Conditions", href: "/terms" },
+  { label: "Return & Refund Policy", href: "/return-policy" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "FAQ", href: "/contact" },
+];
+
+const CUSTOMER_CARE = [
+  { label: "Track Your Order", href: "/track-order" },
+  { label: "Contact Us", href: "/contact" },
+  { label: "About Us", href: "/about" },
+  { label: "Blog", href: "/blog" },
+  { label: "All Products", href: "/products" },
+];
+
+const SHOP_HOURS = {
+  days: "All Days Open",
+  hours: "09:00 AM – 09:00 PM",
 };
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [subscribeMsg, setSubscribeMsg] = useState("");
 
-  const sections: Record<string, { label: string; href: string }[]> = {
-    "ABOUT BIKERS BRAIN": [
-      { label: "Why Shop With Us?", href: "/about" },
-      { label: "About Us", href: "/about" },
-      { label: "Blog", href: "/blog" },
-      { label: "New Arrivals", href: "/products?sort=newest" },
-      { label: "Best Sellers", href: "/products?sort=popular" },
-    ],
-    "CUSTOMER SERVICE": [
-      { label: "Contact Us", href: "/contact" },
-      { label: "Return Policy", href: "/return-policy" },
-      { label: "Shipping Policy", href: "/shipping-policy" },
-      { label: "Track Order", href: "/track-order" },
-      { label: "FAQ", href: "/contact" },
-    ],
-    "SHOP": [
-      { label: "All Helmets", href: "/products" },
-      { label: "Jackets", href: "/products?category=JACKETS" },
-      { label: "Gloves", href: "/products?category=GLOVES" },
-      { label: "Boots", href: "/products?category=BOOTS" },
-      { label: "Accessories", href: "/products?category=ACCESSORIES" },
-      { label: "On Sale", href: "/products?sale=true" },
-    ],
-    "POLICIES": [
-      { label: "Privacy Policy", href: "/privacy-policy" },
-      { label: "Terms & Conditions", href: "/terms" },
-      { label: "Shipping Policy", href: "/shipping-policy" },
-      { label: "Return Policy", href: "/return-policy" },
-    ],
+  const handleNewsletter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    try {
+      await newsletterApi.subscribe(email.trim());
+      setSubscribeMsg("Thank you for subscribing!");
+      setEmail("");
+    } catch {
+      setSubscribeMsg("Could not subscribe. Try again later.");
+    }
+    setTimeout(() => setSubscribeMsg(""), 5000);
   };
 
-  const socials = [
-    {
-      label: "Instagram",
-      href: "https://instagram.com/bikersbrain",
-      Icon: Instagram,
-    },
-    {
-      label: "Facebook",
-      href: "https://facebook.com/bikersbrain",
-      Icon: Facebook,
-    },
-    {
-      label: "Twitter / X",
-      href: "https://twitter.com/bikersbrain",
-      Icon: Twitter,
-    },
-    {
-      label: "YouTube",
-      href: "https://youtube.com/bikersbrain",
-      Icon: Youtube,
-    },
-  ];
-
-  const trustBadges = [
-    { Icon: ShieldCheck, title: "ISI & DOT Certified", desc: "Genuine Products Only" },
-    { Icon: Truck, title: "Free Shipping", desc: "Orders Above ₹2,999" },
-    { Icon: RotateCcw, title: "3-Day Returns", desc: "Hassle-Free Process" },
-    { Icon: CreditCard, title: "Secure Payment", desc: "UPI, Cards, COD" },
-  ];
-
   return (
-    <footer className="bg-[hsl(0,0%,5%)] text-white border-t border-white/5">
+    <footer className="bg-[#0a0a0a] text-white">
       {/* Orange top accent */}
       <div className="h-1 w-full bg-primary" />
 
-     
+      {/* Main footer */}
+      <div className="container mx-auto px-4 py-10 lg:py-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
 
-      {/* Main */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-          {/* Brand column */}
-          <div className="col-span-2">
-            <Link to="/" className="inline-flex items-center gap-2.5 mb-5">
+          {/* ── Column 1: Brand + Address + Contact ── */}
+          <div>
+            <Link to="/" className="inline-flex items-center gap-2.5 mb-4">
               <img src={logo} alt="BikersBrain" className="h-10 w-auto" />
-              <span className="text-lg font-bold tracking-tight">
+              <span className="text-lg font-bold tracking-tight font-oswald">
                 <span className="text-primary">BIKERS</span>{" "}
                 <span className="text-white">BRAIN</span>
               </span>
             </Link>
-            <p className="text-sm text-white/35 mb-5 max-w-xs leading-relaxed">
-              India's trusted destination for premium motorcycle helmets & riding gear.
-              ISI &amp; DOT certified. Riders serving riders.
+
+            <p className="text-[13px] text-white/40 leading-relaxed mb-5">
+              A venture by{" "}
+              <span className="text-primary font-semibold">Shree Om Automobiles</span>
+              &nbsp;— your one-stop shop for two-wheeler spare parts, riding gear &amp; accessories.
             </p>
 
-            {/* Socials */}
-            <div className="flex items-center gap-2.5 mb-5">
-              {socials.map(({ label, href, Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-white/40 hover:text-primary hover:border-primary/30 hover:bg-primary/10 transition-all"
-                >
-                  <Icon className="h-4 w-4" />
+            {/* Contact details */}
+            <div className="space-y-3 text-sm text-white/50">
+              <a
+                href={CONTACT.mapLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2.5 group"
+              >
+                <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span className="leading-snug group-hover:text-primary transition-colors">
+                  {CONTACT.address}
+                  <ExternalLink className="inline h-3 w-3 ml-1 opacity-40 group-hover:opacity-100" />
+                </span>
+              </a>
+              <div className="flex items-center gap-2.5">
+                <Phone className="h-4 w-4 text-primary flex-shrink-0" />
+                <a href={`tel:${CONTACT.phone}`} className="hover:text-primary transition-colors">
+                  {CONTACT.phone}
                 </a>
-              ))}
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Mail className="h-4 w-4 text-primary flex-shrink-0" />
+                <a href={`mailto:${CONTACT.email}`} className="hover:text-primary transition-colors">
+                  {CONTACT.email}
+                </a>
+              </div>
             </div>
 
-            {/* Contact */}
-            <div className="space-y-1.5 text-xs text-white/35">
+            {/* Social icons */}
+            <div className="mt-5">
+              <p className="text-xs font-semibold tracking-wider uppercase text-white/60 mb-3">
+                Follow Us On
+              </p>
               <div className="flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5 text-primary/60 flex-shrink-0" />
-                <a href={`mailto:${CONTACT_INFO.email}`} className="hover:text-primary transition-colors">
-                  {CONTACT_INFO.email}
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5 text-primary/60 flex-shrink-0" />
-                <a href={`tel:${CONTACT_INFO.phone}`} className="hover:text-primary transition-colors">
-                  {CONTACT_INFO.phone}
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-primary/60 flex-shrink-0" />
-                <span>{CONTACT_INFO.address}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5 text-primary/60 flex-shrink-0" />
-                <span>{CONTACT_INFO.workingHours}</span>
+                {SOCIALS.map(({ label, href, Icon, color }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className={`w-9 h-9 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/50 ${color} hover:border-primary/40 hover:bg-primary/10 transition-all`}
+                  >
+                    <Icon className="h-[18px] w-[18px]" />
+                  </a>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Link columns */}
-          {Object.entries(sections).map(([title, links]) => (
-            <div key={title}>
-              <h4 className="text-xs font-bold tracking-wider uppercase text-white mb-4">{title}</h4>
-              <ul className="space-y-2.5">
-                {links.map((link) => (
-                  <li key={link.href + link.label}>
-                    <Link
-                      to={link.href}
-                      className="text-sm text-white/35 hover:text-primary transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+          {/* ── Column 2: Useful Links ── */}
+          <div>
+            <h4 className="text-sm font-bold tracking-wider uppercase text-white mb-5 font-oswald">
+              Useful Links
+            </h4>
+            <ul className="space-y-3">
+              {USEFUL_LINKS.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
+                    className="text-sm text-white/45 hover:text-primary hover:translate-x-1 transition-all inline-block"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Column 3: Customer Care ── */}
+          <div>
+            <h4 className="text-sm font-bold tracking-wider uppercase text-white mb-5 font-oswald">
+              Customer Care
+            </h4>
+            <ul className="space-y-3">
+              {CUSTOMER_CARE.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
+                    className="text-sm text-white/45 hover:text-primary hover:translate-x-1 transition-all inline-block"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {/* Shop hours */}
+            <div className="mt-8">
+              <h4 className="text-sm font-bold tracking-wider uppercase text-white mb-3 font-oswald">
+                Working Hours
+              </h4>
+              <div className="flex items-start gap-2.5 text-sm text-white/45">
+                <Clock className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-white/60 font-medium">{SHOP_HOURS.days}</p>
+                  <p>{SHOP_HOURS.hours}</p>
+                </div>
+              </div>
             </div>
-          ))}
+          </div>
+
+          {/* ── Column 4: Newsletter ── */}
+          <div>
+            <h4 className="text-sm font-bold tracking-wider uppercase text-white mb-3 font-oswald">
+              Newsletter
+            </h4>
+            <p className="text-sm text-white/40 mb-4 leading-relaxed">
+              Subscribe for the latest deals, new arrivals &amp; exclusive offers.
+            </p>
+            <form onSubmit={handleNewsletter} className="flex">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your email address"
+                className="flex-1 min-w-0 px-3 py-2.5 text-sm bg-white/5 border border-white/10 rounded-l-lg text-white placeholder:text-white/25 focus:outline-none focus:border-primary/50 transition-colors"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-black rounded-r-lg transition-colors"
+                aria-label="Subscribe"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </form>
+            {subscribeMsg && (
+              <p className={`text-xs mt-2 ${subscribeMsg.includes("Thank") ? "text-green-400" : "text-red-400"}`}>
+                {subscribeMsg}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/5 bg-[hsl(0,0%,3%)]">
-        <div className="container mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-[11px] text-white/20">
-            &copy; {currentYear} BikersBrain. All rights reserved.
+      <div className="border-t border-white/5 bg-[#060606]">
+        <div className="container mx-auto px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-white/25 text-center md:text-left">
+            &copy; {currentYear} BikersBrain by Shree Om Automobiles — All rights reserved.
           </p>
-          <div className="flex items-center gap-5">
-            <Link to="/privacy-policy" className="text-[11px] text-white/20 hover:text-primary transition-colors">
-              Privacy Policy
-            </Link>
-            <Link to="/terms" className="text-[11px] text-white/20 hover:text-primary transition-colors">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
+            <Link to="/terms" className="text-xs text-white/25 hover:text-primary transition-colors">
               Terms &amp; Conditions
             </Link>
-            <Link to="/shipping-policy" className="text-[11px] text-white/20 hover:text-primary transition-colors">
-              Shipping Policy
+            <Link to="/contact" className="text-xs text-white/25 hover:text-primary transition-colors">
+              Store Location
+            </Link>
+            <Link to="/privacy-policy" className="text-xs text-white/25 hover:text-primary transition-colors">
+              Privacy Policy
             </Link>
           </div>
         </div>

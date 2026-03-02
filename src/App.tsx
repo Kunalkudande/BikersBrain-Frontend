@@ -1,13 +1,14 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import { WishlistProvider } from "@/hooks/useWishlist";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { visitorApi } from "@/lib/api";
 
 // Eager-load the homepage for fastest first paint
 import Index from "./pages/Index";
@@ -23,6 +24,7 @@ const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminBlog = lazy(() => import("./pages/admin/AdminBlog"));
 const AdminVisitors = lazy(() => import("./pages/admin/AdminVisitors"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 
 // Lazy-load all other pages for optimal bundle splitting
 const Products = lazy(() => import("./pages/Products"));
@@ -67,6 +69,32 @@ function PageLoader() {
   );
 }
 
+/**
+ * Fires one tracking call per browser session (sessionStorage-scoped).
+ * Records the landing page & referrer so the admin knows who visited.
+ */
+function VisitorTracker() {
+  const location = useLocation();
+  const tracked = useRef(false);
+
+  useEffect(() => {
+    if (tracked.current) return;
+    // Skip tracking admin pages
+    if (location.pathname.startsWith("/admin")) return;
+
+    let sessionId = sessionStorage.getItem("bb_sid");
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      sessionStorage.setItem("bb_sid", sessionId);
+    }
+
+    tracked.current = true;
+    visitorApi.track(location.pathname, sessionId, document.referrer || undefined);
+  }, [location.pathname]);
+
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ErrorBoundary isOuterBoundary>
@@ -77,6 +105,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <VisitorTracker />
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
@@ -111,6 +140,7 @@ const App = () => (
                       <Route path="coupons" element={<AdminCoupons />} />
                       <Route path="blog" element={<AdminBlog />} />
                       <Route path="visitors" element={<AdminVisitors />} />
+                      <Route path="settings" element={<AdminSettings />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
