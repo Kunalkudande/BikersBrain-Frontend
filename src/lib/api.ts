@@ -314,6 +314,10 @@ export const blogApi = {
 export const contactApi = {
   submit: (body: { name: string; email: string; subject: string; message: string }) =>
     request('/contact', { method: 'POST', body: JSON.stringify(body) }),
+  submitBulkInquiry: (body: {
+    name: string; email: string; phone: string; businessName: string;
+    quantity: number; message: string; productName: string; productSlug: string; productUrl: string;
+  }) => request('/contact/bulk-inquiry', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 /* ─── Newsletter ─── */
@@ -381,8 +385,8 @@ export const adminApi = {
   setPrimaryImage: (id: string, imageId: string) =>
     request(`/products/${id}/images/${imageId}/primary`, { method: 'PUT' }),
 
-  autofill: (productName: string) =>
-    request('/products/autofill', { method: 'POST', body: JSON.stringify({ productName }) }),
+  autofill: (productName: string, category?: string) =>
+    request('/products/autofill', { method: 'POST', body: JSON.stringify({ productName, category }) }),
 
   // Categories (dynamic DB-driven)
   getCategories: () => request('/admin/categories'),

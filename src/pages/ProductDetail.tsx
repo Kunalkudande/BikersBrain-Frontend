@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, ChevronLeft, ChevronRight, Check, MessageCircle } from "lucide-react";
+import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Minus, Plus, ChevronLeft, ChevronRight, Check, MessageCircle, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BulkOrderModal from "@/components/BulkOrderModal";
 import SEO, { productJsonLd, breadcrumbJsonLd } from "@/components/SEO";
 import { productsApi } from "@/lib/api";
 import { useCart } from "@/hooks/useCart";
@@ -93,6 +94,7 @@ export default function ProductDetail() {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const zoomRef = useRef<HTMLDivElement>(null);
@@ -526,6 +528,26 @@ export default function ProductDetail() {
                   Buy on WhatsApp
                 </Button>
               </div>
+
+              {/* Bulk / Wholesale Order */}
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full mb-4 font-barlow-condensed font-semibold tracking-wider uppercase gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={() => setBulkModalOpen(true)}
+              >
+                <Package className="h-4 w-4" />
+                Bulk / Wholesale Inquiry
+              </Button>
+
+              {product && (
+                <BulkOrderModal
+                  open={bulkModalOpen}
+                  onOpenChange={setBulkModalOpen}
+                  productName={product.name}
+                  productSlug={product.slug}
+                />
+              )}
 
               {maxStock > 0 && maxStock <= 5 && (
                 <p className="text-destructive text-sm mb-4">Only {maxStock} left in stock!</p>

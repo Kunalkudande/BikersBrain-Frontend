@@ -111,6 +111,51 @@ const SPEC_CONFIGS: Record<string, SpecConfig> = {
     certLabel: "Features",
     certifications: ["Reflective", "Rain Cover Included", "Quick Release", "Lockable", "Expandable"],
   },
+  Electronics: {
+    title: "Electronics Specifications",
+    desc: "Power, connectivity & compatibility",
+    weightLabel: "Weight",
+    weightPlaceholder: "e.g. 200g",
+    materialLabel: "Build Material",
+    materials: ["Plastic", "Metal", "Rubber", "ABS", "Aluminium", "Silicone"],
+    visorLabel: "Connectivity",
+    visorOptions: ["Bluetooth 5.0", "Bluetooth 5.3", "USB-C", "Wired", "WiFi", "N/A"],
+    showVisor: true,
+    ventilationLabel: "Waterproof (IP Rating)",
+    showVentilation: true,
+    certLabel: "Certifications",
+    certifications: ["CE", "FCC", "RoHS", "IP65", "IP67", "BIS"],
+  },
+  Accessories: {
+    title: "Accessory Specifications",
+    desc: "Details & compatibility",
+    weightLabel: "Weight",
+    weightPlaceholder: "e.g. 250g",
+    materialLabel: "Material",
+    materials: ["Plastic", "Metal", "Rubber", "Nylon", "Leather", "Silicone", "Carbon Fiber", "Neoprene"],
+    visorLabel: "Type",
+    visorOptions: [],
+    showVisor: false,
+    ventilationLabel: "Universal Fit",
+    showVentilation: true,
+    certLabel: "Standards",
+    certifications: ["CE", "ISO", "OEM", "RoHS"],
+  },
+};
+
+/* Map individual category values to spec config keys */
+const CATEGORY_TO_SPEC: Record<string, string> = {
+  // Helmets
+  FULL_FACE: "Helmets", HALF_FACE: "Helmets", OPEN_FACE: "Helmets",
+  MODULAR: "Helmets", OFF_ROAD: "Helmets", KIDS: "Helmets", LADIES: "Helmets",
+  // Riding Gear
+  JACKETS: "Riding Gear", GLOVES: "Riding Gear", BOOTS: "Riding Gear", RIDING_PANTS: "Riding Gear",
+  // Individual categories
+  PARTS: "Spare Parts", SPARE_PARTS: "Spare Parts",
+  LUGGAGE: "Luggage & Touring",
+  ELECTRONICS: "Electronics",
+  ACCESSORIES: "Accessories",
+  OIL: "Oil", OILS: "Oil", ENGINE_OIL: "Oil",
 };
 
 const DEFAULT_SPEC_CONFIG: SpecConfig = {
@@ -129,11 +174,16 @@ const DEFAULT_SPEC_CONFIG: SpecConfig = {
   certifications: ["CE", "ISO", "OEM", "RoHS"],
 };
 
-/** Find the best spec config for a given group name */
-function getSpecConfig(group: string): SpecConfig {
-  // Exact match
+/** Find the best spec config — checks category value first, then group name */
+function getSpecConfig(group: string, categoryValue?: string): SpecConfig {
+  // 1. Direct match by category value (most precise)
+  if (categoryValue) {
+    const mappedKey = CATEGORY_TO_SPEC[categoryValue.toUpperCase()];
+    if (mappedKey && SPEC_CONFIGS[mappedKey]) return SPEC_CONFIGS[mappedKey];
+  }
+  // 2. Exact match by group name
   if (SPEC_CONFIGS[group]) return SPEC_CONFIGS[group];
-  // Fuzzy match (e.g. "Accessories & More" → default, "Helmets" → Helmets)
+  // 3. Fuzzy match on group name
   const lower = group.toLowerCase();
   for (const [key, config] of Object.entries(SPEC_CONFIGS)) {
     if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) return config;
@@ -284,7 +334,7 @@ export default function AdminProductForm() {
   })();
 
   // Get the spec config for the current category's group
-  const specConfig = getSpecConfig(selectedGroup);
+  const specConfig = getSpecConfig(selectedGroup, category);
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
@@ -374,7 +424,7 @@ export default function AdminProductForm() {
     }
     setAutofilling(true);
     try {
-      const res = await adminApi.autofill(name.trim());
+      const res = await adminApi.autofill(name.trim(), category || undefined);
       const d = (res as any).data;
       setBrand(d.brand || brand);
       setCategory(d.category || category);
