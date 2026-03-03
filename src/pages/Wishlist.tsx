@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +51,7 @@ export default function Wishlist() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="My Wishlist" noIndex />
       <Header />
       <main className="container mx-auto px-4 py-8">
         <h1 className="font-oswald text-2xl md:text-3xl font-bold uppercase mb-8">

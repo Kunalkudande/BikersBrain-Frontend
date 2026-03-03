@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -96,6 +97,7 @@ function VisitorTracker() {
 }
 
 const App = () => (
+  <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <ErrorBoundary isOuterBoundary>
       <AuthProvider>
@@ -153,6 +155,7 @@ const App = () => (
       </AuthProvider>
     </ErrorBoundary>
   </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { breadcrumbJsonLd } from "@/components/SEO";
 import { blogApi } from "@/lib/api";
 
 interface BlogPost {
@@ -55,16 +56,26 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Motorcycle Blog — Riding Tips, Gear Reviews & Bike Maintenance"
+        description="Read expert riding tips, helmet & gear reviews, motorcycle maintenance guides and two-wheeler culture from BikersBrain. Stay informed, ride safe."
+        canonical="/blog"
+        keywords="motorcycle blog India, bike maintenance tips, helmet reviews, riding gear guide, two wheeler tips"
+        jsonLd={breadcrumbJsonLd([
+          { name: "Home", url: "/" },
+          { name: "Blog", url: "/blog" },
+        ])}
+      />
       <Header />
       <main>
         {/* Hero */}
         <section className="py-12 md:py-16 bg-gradient-to-b from-primary/5 to-transparent">
           <div className="container mx-auto px-4 text-center">
             <h1 className="font-oswald text-3xl md:text-4xl font-bold uppercase mb-3">
-              The <span className="text-primary">Blog</span>
+              Motorcycle <span className="text-primary">Blog</span>
             </h1>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Riding tips, gear reviews, motorcycle culture, and everything a biker needs to know.
+              Expert riding tips, gear reviews, maintenance guides, and everything a biker needs to know.
             </p>
           </div>
         </section>

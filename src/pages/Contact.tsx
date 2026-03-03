@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { localBusinessJsonLd, breadcrumbJsonLd } from "@/components/SEO";
 import { contactApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -37,6 +38,19 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Contact BikersBrain — Get Help with Orders & Products"
+        description="Have questions about bike spare parts, orders or riding gear? Contact BikersBrain at +91 97621 63742 or visit our Pune store. We're here to help!"
+        canonical="/contact"
+        keywords="contact BikersBrain, bike parts shop Pune, two wheeler store near me, BikersBrain phone number"
+        jsonLd={[
+          localBusinessJsonLd(),
+          breadcrumbJsonLd([
+            { name: "Home", url: "/" },
+            { name: "Contact Us", url: "/contact" },
+          ]),
+        ]}
+      />
       <Header />
       <main>
         <section className="py-16 md:py-20">

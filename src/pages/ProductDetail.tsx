@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { productJsonLd, breadcrumbJsonLd } from "@/components/SEO";
 import { productsApi } from "@/lib/api";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -240,11 +241,28 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={`${product.name} — ${product.brand} | Buy Online`}
+        description={`Buy ${product.name} by ${product.brand} at ₹${(product.discountPrice || product.price).toLocaleString("en-IN")}. ${product.description?.slice(0, 100)}… 100% genuine. Free shipping over ₹2,999.`}
+        canonical={`/products/${product.slug}`}
+        ogType="product"
+        ogImage={product.images?.[0]?.imageUrl}
+        keywords={`buy ${product.name}, ${product.brand} ${product.category.replace(/_/g, " ")}, ${product.name} price India, genuine ${product.category.replace(/_/g, " ")}`}
+        jsonLd={[
+          productJsonLd(product),
+          breadcrumbJsonLd([
+            { name: "Home", url: "/" },
+            { name: "Products", url: "/products" },
+            { name: product.category.replace(/_/g, " "), url: `/products?category=${product.category}` },
+            { name: product.name, url: `/products/${product.slug}` },
+          ]),
+        ]}
+      />
       <Header />
       <main>
         {/* Breadcrumb */}
         <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-primary">Home</Link>
             <ChevronRight className="h-3 w-3" />
             <Link to="/products" className="hover:text-primary">Products</Link>
@@ -275,9 +293,11 @@ export default function ProductDetail() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.2 }}
                     src={product.images[selectedImage]?.imageUrl || "https://placehold.co/800x800/1F2937/FF6B35?text=No+Image"}
-                    alt={product.name}
+                    alt={`${product.brand} ${product.name} — product image ${selectedImage + 1}`}
                     className="w-full h-full object-cover"
                     draggable={false}
+                    width={800}
+                    height={800}
                   />
 
                   {/* Hover lens indicator */}
@@ -540,7 +560,7 @@ export default function ProductDetail() {
             </TabsList>
 
             <TabsContent value="description" className="mt-6">
-              <div className="prose prose-invert max-w-none">
+              <div className="prose prose-invert max-w-none" itemProp="description">
                 <p className="text-muted-foreground leading-relaxed">{product.description}</p>
               </div>
             </TabsContent>

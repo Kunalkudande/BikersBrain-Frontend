@@ -2,10 +2,20 @@ import { Link } from "react-router-dom";
 import { ChevronLeft, RotateCcw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { breadcrumbJsonLd } from "@/components/SEO";
 
 export default function ReturnPolicy() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Return & Refund Policy — 3-Day Easy Returns"
+        description="BikersBrain's 3-day hassle-free return & refund policy. Learn how to return or exchange bike spare parts, helmets & accessories purchased from BikersBrain."
+        canonical="/return-policy"
+        jsonLd={breadcrumbJsonLd([
+          { name: "Home", url: "/" },
+          { name: "Return Policy", url: "/return-policy" },
+        ])}
+      />
       <Header />
       <main className="py-10 px-4">
         <div className="max-w-3xl mx-auto">

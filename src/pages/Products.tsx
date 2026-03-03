@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { breadcrumbJsonLd, itemListJsonLd } from "@/components/SEO";
 import { productsApi } from "@/lib/api";
 import { useWishlist } from "@/hooks/useWishlist";
 
@@ -115,8 +116,37 @@ export default function Products() {
 
   const hasFilters = category || brand || search || inStock;
 
+  // SEO: build per-page title and description
+  const categoryLabel = category ? categories.find(c => c.value === category)?.label || category.replace(/_/g, " ") : "";
+  const seoTitle = category
+    ? `Buy ${categoryLabel} Online India — Two-Wheeler ${categoryLabel}`
+    : search
+    ? `Search Results for "${search}" — Bike Parts & Accessories`
+    : "All Two-Wheeler Spare Parts, Helmets & Accessories";
+  const seoDescription = category
+    ? `Shop genuine ${categoryLabel.toLowerCase()} for motorcycles & scooters at BikersBrain. 100% authentic, fast delivery across India. Free shipping over ₹2,999.`
+    : search
+    ? `Showing results for "${search}" — browse genuine bike spare parts, helmets, riding gear & accessories at BikersBrain.`
+    : "Browse 1000+ genuine two-wheeler spare parts, motorcycle helmets, riding gear, engine oils & accessories. Filter by brand, category & price. Free shipping over ₹2,999.";
+  const seoCanonical = category ? `/products?category=${category}` : "/products";
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical={seoCanonical}
+        keywords={`buy ${categoryLabel.toLowerCase() || "bike spare parts"} online, two wheeler ${categoryLabel.toLowerCase() || "accessories"}, motorcycle parts India, genuine bike accessories`}
+        jsonLd={[
+          breadcrumbJsonLd([
+            { name: "Home", url: "/" },
+            { name: category ? categoryLabel : "All Products", url: seoCanonical },
+          ]),
+          ...(products.length > 0
+            ? [itemListJsonLd(products, category ? categoryLabel : "All Products")]
+            : []),
+        ]}
+      />
       <Header />
       <main>
         {/* Page Header */}
@@ -322,9 +352,11 @@ export default function Products() {
                           <div className="relative aspect-square overflow-hidden">
                             <img
                               src={product.images?.[0]?.imageUrl || "https://placehold.co/400x400/1F2937/FF6B35?text=No+Image"}
-                              alt={product.name}
+                              alt={`${product.brand} ${product.name} — Buy online at BikersBrain`}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                               loading="lazy"
+                              width={400}
+                              height={400}
                             />
                             {product.discountPrice && (
                               <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground">

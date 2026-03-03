@@ -2,10 +2,20 @@ import { Link } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { breadcrumbJsonLd } from "@/components/SEO";
 
 export default function Terms() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Terms & Conditions — Rules of Use"
+        description="Read BikersBrain's terms & conditions covering account usage, ordering, payments, shipping and dispute resolution for online purchases of bike parts & accessories."
+        canonical="/terms"
+        jsonLd={breadcrumbJsonLd([
+          { name: "Home", url: "/" },
+          { name: "Terms & Conditions", url: "/terms" },
+        ])}
+      />
       <Header />
       <main className="py-10 px-4">
         <div className="max-w-3xl mx-auto">

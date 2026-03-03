@@ -3,25 +3,78 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BikersBrain — Two-Wheeler Spare Parts, Accessories & Riding Gear</title>
-    <meta name="description" content="India's most trusted destination for two-wheeler spare parts, helmets, riding gear, bike accessories, engine oils, coils & more. Free shipping on orders over ₹2,999." />
+    <title>BikersBrain — Two-Wheeler Spare Parts, Accessories & Riding Gear Online India</title>
+    <meta name="description" content="India's #1 online store for two-wheeler spare parts, motorcycle helmets, riding gear, engine oils & bike accessories. 100% genuine products. Free shipping over ₹2,999." />
     <meta name="author" content="BikersBrain" />
-    <meta name="keywords" content="bike spare parts, two wheeler accessories, motorcycle helmets, engine oil, riding gear, bike accessories, coils, brake pads, bikers brain, bike parts online india" />
+    <meta name="keywords" content="bike spare parts online India, two wheeler accessories, motorcycle helmets, engine oil for bikes, riding gear India, bike accessories online, brake pads, bikers brain, buy bike parts online" />
 
-    <meta property="og:title" content="BikersBrain — Two-Wheeler Spare Parts & Accessories" />
-    <meta property="og:description" content="Shop genuine two-wheeler spare parts, helmets, riding gear, engine oils, bike accessories & more. 100% authentic products with free shipping." />
+    <!-- Default Open Graph (overridden per-page by react-helmet-async) -->
+    <meta property="og:title" content="BikersBrain — Buy Two-Wheeler Spare Parts & Accessories Online" />
+    <meta property="og:description" content="Shop genuine motorcycle spare parts, helmets, riding gear, engine oils & accessories. 100% authentic. Free shipping over ₹2,999." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://bikersbrain.in" />
+    <meta property="og:image" content="https://bikersbrain.in/og-image.png" />
+    <meta property="og:site_name" content="BikersBrain" />
+    <meta property="og:locale" content="en_IN" />
 
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@BikersBrain" />
+    <meta name="twitter:image" content="https://bikersbrain.in/og-image.png" />
 
+    <!-- Canonical (overridden per-page) -->
+    <link rel="canonical" href="https://bikersbrain.in" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://checkout.razorpay.com" />
+    <link rel="preconnect" href="https://res.cloudinary.com" />
+    <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
+    <!-- Google Fonts: non-blocking with display=swap -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+
+    <!-- Razorpay: defer to avoid render-blocking -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#FF6B35" />
   </head>
 
   <body>
     <div id="root"></div>
+    <!-- Noscript fallback for crawlers that don't execute JS -->
+    <noscript>
+      <div style="max-width:800px;margin:40px auto;padding:20px;font-family:sans-serif;">
+        <h1>BikersBrain — India's #1 Online Store for Two-Wheeler Spare Parts & Accessories</h1>
+        <p>Shop genuine motorcycle spare parts, helmets, riding gear, engine oils and bike accessories at unbeatable prices. 100% authentic products with free shipping over ₹2,999.</p>
+        <h2>Popular Categories</h2>
+        <ul>
+          <li><a href="/products?category=HELMETS">Motorcycle Helmets</a></li>
+          <li><a href="/products?category=RIDING_GEAR">Riding Gear & Jackets</a></li>
+          <li><a href="/products?category=ENGINE_OILS">Engine Oils & Lubricants</a></li>
+          <li><a href="/products?category=SPARE_PARTS">Bike Spare Parts</a></li>
+          <li><a href="/products?category=ACCESSORIES">Bike Accessories</a></li>
+        </ul>
+        <h2>Quick Links</h2>
+        <ul>
+          <li><a href="/products">All Products</a></li>
+          <li><a href="/blog">Motorcycle Blog</a></li>
+          <li><a href="/about">About BikersBrain</a></li>
+          <li><a href="/contact">Contact Us</a></li>
+        </ul>
+        <p>Contact: +91 97621 63742 | bikersbrain.official@gmail.com</p>
+        <p>Visit: Shop No. 7, Highway Chowk, NDA Rd, Warje, Pune, Maharashtra 411058</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

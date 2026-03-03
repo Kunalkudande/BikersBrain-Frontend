@@ -16,10 +16,10 @@ const DealsBanner = () => {
             Limited Time
           </span>
           <h2 className="font-oswald text-4xl md:text-6xl font-bold uppercase mb-3">
-            Up to <span className="text-primary">50% Off</span>
+            Up to <span className="text-primary">50% Off</span> on Bike Parts
           </h2>
           <p className="text-muted-foreground text-lg mb-6 max-w-md mx-auto">
-            Massive clearance on spare parts, gear &amp; accessories. Don't miss out.
+            Massive clearance on genuine motorcycle spare parts, riding gear &amp; accessories. Shop now &amp; save big.
           </p>
           <Button size="lg" className="font-barlow-condensed font-semibold tracking-wider uppercase" asChild>
             <Link to="/products?sale=true">Shop Deals</Link>

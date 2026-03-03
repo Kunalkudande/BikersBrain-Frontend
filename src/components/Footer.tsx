@@ -54,7 +54,7 @@ const CUSTOMER_CARE = [
   { label: "Track Your Order", href: "/track-order" },
   { label: "Contact Us", href: "/contact" },
   { label: "About Us", href: "/about" },
-  { label: "Blog", href: "/blog" },
+  { label: "Blog — Riding Tips & Guides", href: "/blog" },
   { label: "All Products", href: "/products" },
 ];
 
@@ -157,7 +157,7 @@ const Footer = () => {
           </div>
 
           {/* ── Column 2: Useful Links ── */}
-          <div>
+          <nav aria-label="Useful links">
             <h4 className="text-sm font-bold tracking-wider uppercase text-white mb-5 font-oswald">
               Useful Links
             </h4>
@@ -173,10 +173,10 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
           {/* ── Column 3: Customer Care ── */}
-          <div>
+          <nav aria-label="Customer care">
             <h4 className="text-sm font-bold tracking-wider uppercase text-white mb-5 font-oswald">
               Customer Care
             </h4>
@@ -206,7 +206,7 @@ const Footer = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </nav>
 
           {/* ── Column 4: Newsletter ── */}
           <div>

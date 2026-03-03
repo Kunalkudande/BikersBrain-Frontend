@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Shield, Award, Truck, Users, Wrench, Star } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { breadcrumbJsonLd } from "@/components/SEO";
 
 const values = [
   { icon: Shield, title: "100% Genuine", desc: "Every product is sourced directly from authorized distributors and trusted brands." },
@@ -15,6 +16,16 @@ const values = [
 export default function About() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="About BikersBrain — India's Trusted Two-Wheeler Parts Store"
+        description="BikersBrain by Shree Om Automobiles — India's go-to destination for genuine two-wheeler spare parts, riding gear & accessories. Learn our story, values & mission."
+        canonical="/about"
+        keywords="about BikersBrain, Shree Om Automobiles Pune, bike parts store India, genuine two wheeler parts"
+        jsonLd={breadcrumbJsonLd([
+          { name: "Home", url: "/" },
+          { name: "About Us", url: "/about" },
+        ])}
+      />
       <Header />
       <main>
         {/* Hero */}
@@ -34,7 +45,7 @@ export default function About() {
               transition={{ delay: 0.1 }}
               className="text-muted-foreground max-w-2xl mx-auto text-lg"
             >
-              Born from a passion for motorcycles, BikersBrain is India's go-to destination for two-wheeler spare parts, riding gear &amp; accessories. We believe every rider deserves genuine, top-quality products — without compromise.
+              Born from a passion for motorcycles, BikersBrain is India's trusted online destination for genuine two-wheeler spare parts, riding gear &amp; accessories. We believe every rider deserves authentic, top-quality products — without compromise.
             </motion.p>
           </div>
         </section>
@@ -48,13 +59,13 @@ export default function About() {
               </h2>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  It started with a simple frustration — finding genuine two-wheeler spare parts and accessories in India was harder than it should be. Counterfeit products, unreliable sellers, and poor after-sales support made every purchase a gamble.
+                  It started with a simple frustration — finding genuine two-wheeler spare parts and accessories online in India was harder than it should be. Counterfeit products, unreliable sellers, and poor after-sales support made every purchase a gamble.
                 </p>
                 <p>
-                  In 2024, a group of passionate riders decided to change that. BikersBrain was created to be the one-stop shop for everything a two-wheeler needs: from helmets and riding gear to engine oils, brake pads, coils, and every spare part in between.
+                  In 2024, a group of passionate riders decided to change that. BikersBrain was created to be the one-stop online shop for everything a two-wheeler needs: from motorcycle helmets and riding gear to engine oils, brake pads, chain sprocket kits, and every spare part in between.
                 </p>
                 <p>
-                  We work directly with trusted brands — both Indian and international — to bring you authentic products at competitive prices, backed by genuine warranty and hassle-free service.
+                  Operating through Shree Om Automobiles from our Pune store, we work directly with authorized brands — both Indian and international — to bring you authentic products at competitive prices, backed by genuine warranty and hassle-free 3-day returns.
                 </p>
               </div>
             </div>
@@ -97,10 +108,10 @@ export default function About() {
         {/* CTA */}
         <section className="py-16 container mx-auto px-4 text-center">
           <h2 className="font-oswald text-2xl md:text-3xl font-bold uppercase mb-4">
-            Ride Safe. <span className="text-primary">Ride Smart.</span>
+            Why Riders Choose <span className="text-primary">BikersBrain</span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto mb-6">
-            Whether you’re commuting daily or touring cross-country, we’ve got everything — from spare parts and oils to helmets and riding gear — to keep you and your bike in top shape.
+            Whether you're commuting daily or touring cross-country, BikersBrain has everything — from genuine spare parts and engine oils to premium helmets and riding gear — to keep you and your bike in top shape. Shop now and ride with confidence.
           </p>
         </section>
       </main>

@@ -2,10 +2,20 @@ import { Link } from "react-router-dom";
 import { ChevronLeft, Truck, Package, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { breadcrumbJsonLd } from "@/components/SEO";
 
 export default function ShippingPolicy() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Shipping Policy — Free Delivery Over ₹2,999"
+        description="BikersBrain ships across India within 3-7 business days. Free shipping on orders over ₹2,999. Track your order in real-time. Learn about shipping charges & partners."
+        canonical="/shipping-policy"
+        jsonLd={breadcrumbJsonLd([
+          { name: "Home", url: "/" },
+          { name: "Shipping Policy", url: "/shipping-policy" },
+        ])}
+      />
       <Header />
       <main className="py-10 px-4">
         <div className="max-w-3xl mx-auto">

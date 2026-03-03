@@ -2,10 +2,16 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SEO from "@/components/SEO";
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <SEO
+        title="Page Not Found (404)"
+        description="The page you're looking for doesn't exist. Browse BikersBrain for genuine bike spare parts, helmets & riding gear."
+        noIndex
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

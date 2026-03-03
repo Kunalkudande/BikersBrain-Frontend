@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { useCart } from "@/hooks/useCart";
 
 export default function Cart() {
@@ -13,6 +14,7 @@ export default function Cart() {
   if (!cart || cart.items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
+        <SEO title="Your Shopping Cart" noIndex />
         <Header />
         <div className="container mx-auto px-4 py-20 text-center">
           <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -36,6 +38,7 @@ export default function Cart() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Your Shopping Cart" noIndex />
       <Header />
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">

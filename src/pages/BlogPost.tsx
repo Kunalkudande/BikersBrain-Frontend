@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO, { articleJsonLd, breadcrumbJsonLd } from "@/components/SEO";
 import { blogApi } from "@/lib/api";
 
 interface BlogPostDetail {
@@ -68,10 +69,26 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={post.title}
+        description={post.excerpt?.slice(0, 155) || `Read ${post.title} on the BikersBrain blog.`}
+        canonical={`/blog/${post.slug}`}
+        ogType="article"
+        ogImage={post.coverImage}
+        keywords={`${post.category}, ${post.tags?.join(", ") || "motorcycle blog"}, BikersBrain blog`}
+        jsonLd={[
+          articleJsonLd(post),
+          breadcrumbJsonLd([
+            { name: "Home", url: "/" },
+            { name: "Blog", url: "/blog" },
+            { name: post.title, url: `/blog/${post.slug}` },
+          ]),
+        ]}
+      />
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Link to="/" className="hover:text-primary">Home</Link>
           <ChevronRight className="h-3 w-3" />
           <Link to="/blog" className="hover:text-primary">Blog</Link>
@@ -79,7 +96,12 @@ export default function BlogPost() {
           <span className="text-foreground truncate">{post.title}</span>
         </nav>
 
-        <motion.article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <motion.article
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          itemScope
+          itemType="https://schema.org/Article"
+        >
           {/* Category + Date */}
           <div className="flex items-center gap-3 mb-3">
             <Badge variant="secondary">{post.category || "General"}</Badge>

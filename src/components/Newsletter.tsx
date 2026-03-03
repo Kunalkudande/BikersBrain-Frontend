@@ -28,10 +28,10 @@ const Newsletter = () => {
     <section className="py-16 bg-secondary/50">
       <div className="container mx-auto px-4 text-center">
         <h2 className="font-oswald text-3xl font-bold uppercase mb-2">
-          Join the <span className="text-primary">Ride</span>
+          Join the <span className="text-primary">BikersBrain</span> Community
         </h2>
         <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Get exclusive deals, new arrivals &amp; maintenance tips delivered to your inbox.
+          Subscribe for exclusive deals on bike spare parts, new product arrivals, riding gear discounts &amp; expert maintenance tips.
         </p>
         <form onSubmit={handleSubscribe} className="flex max-w-md mx-auto gap-2">
           <Input

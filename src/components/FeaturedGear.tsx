@@ -252,9 +252,11 @@ const FeaturedGear = () => {
                       >
                         <img
                           src={image}
-                          alt={product.name}
+                          alt={`${product.brand} ${product.name} — Buy online at BikersBrain`}
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
+                          width={400}
+                          height={400}
                         />
 
                         {discount > 0 && (

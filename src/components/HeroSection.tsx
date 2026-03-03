@@ -7,9 +7,16 @@ import heroBg from "@/assets/hero-bike-gear.jpg";
 const HeroSection = () => {
   return (
     <section className="relative h-[560px] md:h-[680px] overflow-hidden">
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${heroBg})` }}
+      {/* Hero image — eagerly loaded for LCP */}
+      <img
+        src={heroBg}
+        alt="Two-wheeler spare parts and riding gear from BikersBrain"
+        className="absolute inset-0 w-full h-full object-cover object-center"
+        fetchPriority="high"
+        loading="eager"
+        decoding="async"
+        width={1920}
+        height={680}
       />
       {/* Dark overlay — heavier on left for text legibility, fades right to reveal biker */}
       <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/60 to-background/20" />
@@ -25,13 +32,13 @@ const HeroSection = () => {
           <span className="inline-block px-3 py-1 bg-primary/20 text-primary text-xs font-barlow-condensed font-semibold tracking-widest uppercase rounded mb-4">
             New Arrivals 2026
           </span>
-          <h2 className="font-oswald text-4xl md:text-6xl font-bold leading-tight mb-4">
+          <h1 className="font-oswald text-4xl md:text-6xl font-bold leading-tight mb-4">
             RIDE WITH
             <br />
             <span className="text-primary">CONFIDENCE</span>
-          </h2>
+          </h1>
           <p className="text-muted-foreground text-lg mb-8 max-w-md">
-            Spare parts, helmets, riding gear, engine oils &amp; accessories — everything your two-wheeler needs, at unbeatable prices.
+            Buy genuine two-wheeler spare parts, motorcycle helmets, riding gear, engine oils &amp; accessories online — at unbeatable prices with free shipping over ₹2,999.
           </p>
           <div className="flex gap-3">
             <Button size="lg" className="font-barlow-condensed font-semibold tracking-wider uppercase gap-2" asChild>
