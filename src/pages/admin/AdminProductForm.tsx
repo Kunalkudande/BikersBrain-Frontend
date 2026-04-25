@@ -1,12 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { adminApi, productsApi } from "@/lib/api";
+import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft, Save, Upload, X, Plus, Trash2, Star, ImageIcon,
   Package, Tag, Layers, Settings2, Weight, ChevronDown,
-  Sparkles, Loader2, RefreshCw,
+  Sparkles, Loader2, RefreshCw, ArrowUp, ArrowDown,
 } from "lucide-react";
 
 /* ── Constants ── */
@@ -362,7 +362,7 @@ export default function AdminProductForm() {
     if (!isEdit || !slug) return;
     (async () => {
       try {
-        const res = await productsApi.getBySlug(slug);
+        const res = await adminApi.getProductBySlug(slug);
         const p = (res as any).data;
         setProductId(p.id);
         setName(p.name || "");
@@ -495,12 +495,19 @@ export default function AdminProductForm() {
   };
 
   const setPrimary = async (entry: ImgEntry) => {
-    if (entry.existing && productId && entry.imageId) {
-      try {
-        await adminApi.setPrimaryImage(productId, entry.imageId);
-      } catch { /* ignore, optimistic update */ }
-    }
     setImages((prev) => prev.map((i) => ({ ...i, isPrimary: i.id === entry.id })));
+  };
+
+  const moveImage = (entryId: string, direction: "up" | "down") => {
+    setImages((prev) => {
+      const idx = prev.findIndex((i) => i.id === entryId);
+      if (idx === -1) return prev;
+      const swapWith = direction === "up" ? idx - 1 : idx + 1;
+      if (swapWith < 0 || swapWith >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
+      return next;
+    });
   };
 
   /* ── Variant helpers ── */
@@ -580,14 +587,61 @@ export default function AdminProductForm() {
 
       // Upload new (non-existing) images
       const newImgs = images.filter((i) => !i.existing && i.file);
+      let allServerImages: { id: string; imageUrl: string }[] = [];
       if (pid && newImgs.length > 0) {
         const fd = new FormData();
         newImgs.forEach((i) => i.file && fd.append("images", i.file));
         try {
-          await adminApi.uploadImages(pid, fd);
+          const uploadRes = await adminApi.uploadImages(pid, fd);
+          allServerImages = ((uploadRes as any).data?.images || []) as { id: string; imageUrl: string }[];
           toast({ title: `${newImgs.length} image(s) uploaded` });
         } catch (e: any) {
           toast({ title: "Images upload failed", description: "Product saved but images failed.", variant: "destructive" });
+        }
+      }
+
+      // Persist image sequence + primary selection for both existing and newly uploaded images.
+      if (pid && images.length > 0) {
+        const orderedImageIds: string[] = [];
+        const newImageIdByLocalId = new Map<string, string>();
+
+        if (allServerImages.length > 0 && newImgs.length > 0) {
+          const newestUploaded = allServerImages.slice(-newImgs.length);
+          newImgs.forEach((localEntry, idx) => {
+            const serverImage = newestUploaded[idx];
+            if (serverImage?.id) {
+              newImageIdByLocalId.set(localEntry.id, serverImage.id);
+            }
+          });
+        }
+
+        for (const img of images) {
+          if (img.existing && img.imageId) {
+            orderedImageIds.push(img.imageId);
+            continue;
+          }
+          const mappedId = newImageIdByLocalId.get(img.id);
+          if (mappedId) {
+            orderedImageIds.push(mappedId);
+          }
+        }
+
+        const primary = images.find((img) => img.isPrimary);
+        const primaryImageId =
+          primary?.existing && primary.imageId
+            ? primary.imageId
+            : (primary ? newImageIdByLocalId.get(primary.id) : undefined);
+
+        if (orderedImageIds.length > 0) {
+          try {
+            await adminApi.reorderImages(pid, orderedImageIds, primaryImageId);
+          } catch {
+            toast({
+              title: "Image order not saved",
+              description: "Product was saved, but image sequence update failed.",
+              variant: "destructive",
+            });
+          }
         }
       }
 
@@ -782,11 +836,27 @@ export default function AdminProductForm() {
             {/* Image grid */}
             {images.length > 0 && (
               <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {images.map((img) => (
+                {images.map((img, idx) => (
                   <div key={img.id} className="relative group rounded-xl overflow-hidden bg-white/5 aspect-square">
                     <img src={img.preview} alt="Preview" className="w-full h-full object-cover" />
                     {/* Overlay */}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); moveImage(img.id, "up"); }}
+                        className="p-1.5 rounded-lg bg-white/80 hover:bg-white text-black transition disabled:opacity-40"
+                        title="Move up"
+                        disabled={idx === 0}
+                      >
+                        <ArrowUp size={13} />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); moveImage(img.id, "down"); }}
+                        className="p-1.5 rounded-lg bg-white/80 hover:bg-white text-black transition disabled:opacity-40"
+                        title="Move down"
+                        disabled={idx === images.length - 1}
+                      >
+                        <ArrowDown size={13} />
+                      </button>
                       {!img.isPrimary && (
                         <button
                           onClick={(e) => { e.stopPropagation(); setPrimary(img); }}
@@ -816,6 +886,9 @@ export default function AdminProductForm() {
                         Saved
                       </div>
                     )}
+                    <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 bg-black/60 rounded text-[9px] font-semibold text-white">
+                      #{idx + 1}
+                    </div>
                   </div>
                 ))}
               </div>

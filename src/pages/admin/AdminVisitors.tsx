@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Eye, Users, Monitor, Smartphone, Tablet,
-  Clock, BarChart3, Chrome, Layout, Globe, Loader2,
+  Clock, BarChart3, Chrome, Layout, Globe, Loader2, MapPin,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { adminApi } from "@/lib/api";
@@ -19,12 +19,23 @@ interface VisitorStats {
   topPages: { page: string; count: number }[];
   devices: { device: string; count: number }[];
   browsers: { browser: string; count: number }[];
+  topCountries: { country: string; countryCode: string | null; count: number }[];
+  topCities: { city: string; country: string; count: number }[];
   recentVisitors: {
     ip: string;
     page: string;
     device: string;
     browser: string;
     os: string;
+    country: string | null;
+    countryCode: string | null;
+    region: string | null;
+    city: string | null;
+    timezone: string | null;
+    isp: string | null;
+    isProxy: boolean | null;
+    isHosting: boolean | null;
+    userAgent: string | null;
     referrer: string | null;
     createdAt: string;
   }[];
@@ -264,6 +275,70 @@ export default function AdminVisitors() {
             })}
           </div>
         </div>
+
+        {/* Countries */}
+        <div className="bg-card rounded-xl p-6 border border-border">
+          <div className="flex items-center gap-2 mb-5">
+            <Globe size={18} className="text-primary" />
+            <h2 className="font-semibold text-white">Top Countries</h2>
+          </div>
+          <div className="space-y-3">
+            {stats.topCountries.map((c, i) => {
+              const maxCount = stats.topCountries[0]?.count || 1;
+              return (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-white/70 truncate max-w-[220px]">
+                      {c.countryCode ? `${c.country} (${c.countryCode})` : c.country}
+                    </span>
+                    <span className="text-xs font-medium text-white">{c.count}</span>
+                  </div>
+                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-sky-500/70 rounded-full"
+                      style={{ width: `${(c.count / maxCount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {stats.topCountries.length === 0 && (
+              <p className="text-sm text-muted-foreground">No geo data yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Cities */}
+        <div className="bg-card rounded-xl p-6 border border-border">
+          <div className="flex items-center gap-2 mb-5">
+            <MapPin size={18} className="text-primary" />
+            <h2 className="font-semibold text-white">Top Cities</h2>
+          </div>
+          <div className="space-y-3">
+            {stats.topCities.map((c, i) => {
+              const maxCount = stats.topCities[0]?.count || 1;
+              return (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-white/70 truncate max-w-[220px]">
+                      {c.city}, {c.country}
+                    </span>
+                    <span className="text-xs font-medium text-white">{c.count}</span>
+                  </div>
+                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-orange-500/70 rounded-full"
+                      style={{ width: `${(c.count / maxCount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {stats.topCities.length === 0 && (
+              <p className="text-sm text-muted-foreground">No city data yet</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Recent Visitors Table */}
@@ -279,9 +354,11 @@ export default function AdminVisitors() {
               <tr className="border-b border-border">
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">IP</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Landing Page</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Location</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Device</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Browser</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">OS</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Network</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Time</th>
               </tr>
             </thead>
@@ -296,6 +373,11 @@ export default function AdminVisitors() {
                     <td className="px-5 py-3 text-white max-w-[200px] truncate" title={v.page}>
                       {getPageLabel(v.page)}
                     </td>
+                    <td className="px-5 py-3 text-muted-foreground text-xs">
+                      {v.city || v.region || v.country
+                        ? [v.city, v.region, v.country].filter(Boolean).join(", ")
+                        : "Unknown"}
+                    </td>
                     <td className="px-5 py-3">
                       <span className="flex items-center gap-1.5 text-muted-foreground capitalize">
                         <DeviceIcon size={14} /> {v.device}
@@ -303,6 +385,9 @@ export default function AdminVisitors() {
                     </td>
                     <td className="px-5 py-3 text-muted-foreground">{v.browser}</td>
                     <td className="px-5 py-3 text-muted-foreground">{v.os}</td>
+                    <td className="px-5 py-3 text-muted-foreground text-xs">
+                      {v.isp || "Unknown"}
+                    </td>
                     <td className="px-5 py-3 text-muted-foreground text-xs whitespace-nowrap">
                       {new Date(v.createdAt).toLocaleString("en-IN", {
                         day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
@@ -313,7 +398,7 @@ export default function AdminVisitors() {
               })}
               {stats.recentVisitors.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-5 py-10 text-center text-muted-foreground">
                     No visitors yet. Data will appear as people visit your store.
                   </td>
                 </tr>

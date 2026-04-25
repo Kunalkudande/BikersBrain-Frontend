@@ -367,6 +367,20 @@ export const adminApi = {
   },
 
   // Products (admin CRUD)
+  getProducts: (params?: Record<string, string | number | undefined>) => {
+    const filtered: Record<string, string> = {};
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== null && String(v) !== '') filtered[k] = String(v);
+      }
+    }
+    const qs = Object.keys(filtered).length ? '?' + new URLSearchParams(filtered).toString() : '';
+    return request(`/products/admin/list${qs}`);
+  },
+
+  getProductBySlug: (slug: string) =>
+    request(`/products/admin/${encodeURIComponent(slug)}`),
+
   createProduct: (body: Record<string, unknown>) =>
     request('/products', { method: 'POST', body: JSON.stringify(body) }),
 
@@ -381,6 +395,12 @@ export const adminApi = {
 
   deleteImage: (id: string, imageId: string) =>
     request(`/products/${id}/images/${imageId}`, { method: 'DELETE' }),
+
+  reorderImages: (id: string, orderedImageIds: string[], primaryImageId?: string) =>
+    request(`/products/${id}/images/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ orderedImageIds, ...(primaryImageId ? { primaryImageId } : {}) }),
+    }),
 
   setPrimaryImage: (id: string, imageId: string) =>
     request(`/products/${id}/images/${imageId}/primary`, { method: 'PUT' }),

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { adminApi, productsApi } from "@/lib/api";
+import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   Plus,
@@ -64,7 +64,7 @@ export default function AdminProducts() {
     try {
       const params: Record<string, string | number | undefined> = { page: pg, limit: 15 };
       if (q) params.search = q;
-      const res = await productsApi.list(params);
+      const res = await adminApi.getProducts(params);
       const d = (res as any).data;
       setProducts(d.items || []);
       setPagination({
