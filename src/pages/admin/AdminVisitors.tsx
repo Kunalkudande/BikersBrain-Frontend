@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Eye, Users, Monitor, Smartphone, Tablet,
-  Clock, BarChart3, Chrome, Layout, Globe, Loader2, MapPin,
+  Clock, BarChart3, Chrome, Layout, Globe, Loader2, MapPin, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { adminApi } from "@/lib/api";
@@ -22,6 +22,7 @@ interface VisitorStats {
   topCountries: { country: string; countryCode: string | null; count: number }[];
   topCities: { city: string; country: string; count: number }[];
   recentVisitors: {
+    id: string;
     ip: string;
     page: string;
     device: string;
@@ -38,7 +39,20 @@ interface VisitorStats {
     userAgent: string | null;
     referrer: string | null;
     createdAt: string;
+    pageViews: {
+      page: string;
+      referrer: string | null;
+      createdAt: string;
+    }[];
   }[];
+  visitorsPagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasPrev: boolean;
+    hasNext: boolean;
+  };
   dailyVisits: { date: string; visitors: number; uniqueIPs: number }[];
   period: string;
 }
@@ -73,14 +87,20 @@ export default function AdminVisitors() {
   const [stats, setStats] = useState<VisitorStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
+  const [visitorPage, setVisitorPage] = useState(1);
+  const visitorPageSize = 20;
+
+  useEffect(() => {
+    setVisitorPage(1);
+  }, [days]);
 
   useEffect(() => {
     setLoading(true);
-    adminApi.getVisitorStats(days)
+    adminApi.getVisitorStats(days, visitorPage, visitorPageSize)
       .then((res) => setStats(res.data as VisitorStats))
       .catch(() => setStats(null))
       .finally(() => setLoading(false));
-  }, [days]);
+  }, [days, visitorPage]);
 
   if (loading) {
     return (
@@ -345,8 +365,10 @@ export default function AdminVisitors() {
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="p-5 border-b border-border flex items-center gap-2">
           <Clock size={18} className="text-primary" />
-          <h2 className="font-semibold text-white">Recent Visitors</h2>
-          <span className="text-xs text-muted-foreground ml-2">Last 50</span>
+          <h2 className="font-semibold text-white">Visitor Sessions</h2>
+          <span className="text-xs text-muted-foreground ml-2">
+            Page {stats.visitorsPagination.page} of {stats.visitorsPagination.totalPages} · {stats.visitorsPagination.total} total
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -354,6 +376,7 @@ export default function AdminVisitors() {
               <tr className="border-b border-border">
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">IP</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Landing Page</th>
+                <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Page Journey</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Location</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Device</th>
                 <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Browser</th>
@@ -363,15 +386,30 @@ export default function AdminVisitors() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {stats.recentVisitors.map((v, i) => {
+              {stats.recentVisitors.map((v) => {
                 const DeviceIcon = deviceIcons[v.device] || Globe;
+                const pageViews = v.pageViews?.length
+                  ? v.pageViews
+                  : [{ page: v.page, referrer: v.referrer, createdAt: v.createdAt }];
                 return (
-                  <tr key={i} className="hover:bg-muted/30 transition-colors">
+                  <tr key={v.id} className="hover:bg-muted/30 transition-colors align-top">
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">
                       {v.ip === "::1" || v.ip === "127.0.0.1" ? "localhost" : v.ip}
                     </td>
                     <td className="px-5 py-3 text-white max-w-[200px] truncate" title={v.page}>
                       {getPageLabel(v.page)}
+                    </td>
+                    <td className="px-5 py-3 text-xs text-muted-foreground min-w-[240px]">
+                      <div className="space-y-1">
+                        {pageViews.slice(0, 4).map((pv, idx) => (
+                          <div key={`${pv.createdAt}-${idx}`} className="truncate" title={pv.page}>
+                            <span className="text-white/80">{idx + 1}.</span> {getPageLabel(pv.page)}
+                          </div>
+                        ))}
+                        {pageViews.length > 4 && (
+                          <div className="text-primary">+{pageViews.length - 4} more pages</div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3 text-muted-foreground text-xs">
                       {v.city || v.region || v.country
@@ -398,13 +436,32 @@ export default function AdminVisitors() {
               })}
               {stats.recentVisitors.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-10 text-center text-muted-foreground">
+                  <td colSpan={9} className="px-5 py-10 text-center text-muted-foreground">
                     No visitors yet. Data will appear as people visit your store.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+        <div className="p-4 border-t border-border flex items-center justify-end gap-2">
+          <button
+            onClick={() => setVisitorPage((p) => Math.max(1, p - 1))}
+            disabled={!stats.visitorsPagination.hasPrev || loading}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs text-white/80 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={14} /> Prev
+          </button>
+          <span className="text-xs text-muted-foreground px-1">
+            {stats.visitorsPagination.page} / {stats.visitorsPagination.totalPages}
+          </span>
+          <button
+            onClick={() => setVisitorPage((p) => p + 1)}
+            disabled={!stats.visitorsPagination.hasNext || loading}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs text-white/80 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next <ChevronRight size={14} />
+          </button>
         </div>
       </div>
     </div>

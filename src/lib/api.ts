@@ -438,7 +438,8 @@ export const adminApi = {
     request(`/blog/admin/${id}`, { method: 'DELETE' }),
 
   // Visitor analytics
-  getVisitorStats: (days = 30) => request(`/admin/visitors?days=${days}`),
+  getVisitorStats: (days = 30, page = 1, limit = 20) =>
+    request(`/admin/visitors?days=${days}&page=${page}&limit=${limit}`),
 
   // Settings
   getSettings: () => request('/admin/settings'),

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -32,6 +32,7 @@ const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Account = lazy(() => import("./pages/Account"));
@@ -71,15 +72,13 @@ function PageLoader() {
 }
 
 /**
- * Fires one tracking call per browser session (sessionStorage-scoped).
- * Records the landing page & referrer so the admin knows who visited.
+ * Fires one tracking call per route change (sessionStorage-scoped id).
+ * This keeps one session id while storing all visited pages.
  */
 function VisitorTracker() {
   const location = useLocation();
-  const tracked = useRef(false);
 
   useEffect(() => {
-    if (tracked.current) return;
     // Skip tracking admin pages
     if (location.pathname.startsWith("/admin")) return;
 
@@ -89,7 +88,6 @@ function VisitorTracker() {
       sessionStorage.setItem("bb_sid", sessionId);
     }
 
-    tracked.current = true;
     visitorApi.track(location.pathname, sessionId, document.referrer || undefined);
   }, [location.pathname]);
 
@@ -116,6 +114,8 @@ const App = () => (
                     <Route path="/products/:slug" element={<ProductDetail />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ForgotPassword />} />
                     <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/order-success" element={<OrderSuccess />} />
