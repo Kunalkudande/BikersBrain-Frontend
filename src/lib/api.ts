@@ -420,7 +420,16 @@ export const adminApi = {
     request('/admin/categories/reorder', { method: 'PUT', body: JSON.stringify({ items }) }),
 
   // Coupons
-  getCoupons: () => request('/admin/coupons'),
+  getCoupons: (params?: Record<string, string | number | undefined>) => {
+    const filtered: Record<string, string> = {};
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== null && String(v) !== '') filtered[k] = String(v);
+      }
+    }
+    const qs = Object.keys(filtered).length ? '?' + new URLSearchParams(filtered).toString() : '';
+    return request(`/admin/coupons${qs}`);
+  },
   createCoupon: (body: Record<string, unknown>) =>
     request('/admin/coupons', { method: 'POST', body: JSON.stringify(body) }),
   toggleCoupon: (id: string) =>
@@ -429,7 +438,16 @@ export const adminApi = {
     request(`/admin/coupons/${id}`, { method: 'DELETE' }),
 
   // Blog (admin)
-  getBlogPosts: () => request('/blog/admin/all'),
+  getBlogPosts: (params?: Record<string, string | number | undefined>) => {
+    const filtered: Record<string, string> = {};
+    if (params) {
+      for (const [k, v] of Object.entries(params)) {
+        if (v !== undefined && v !== null && String(v) !== '') filtered[k] = String(v);
+      }
+    }
+    const qs = Object.keys(filtered).length ? '?' + new URLSearchParams(filtered).toString() : '';
+    return request(`/blog/admin/all${qs}`);
+  },
   createBlogPost: (body: Record<string, unknown>) =>
     request('/blog/admin', { method: 'POST', body: JSON.stringify(body) }),
   updateBlogPost: (id: string, body: Record<string, unknown>) =>

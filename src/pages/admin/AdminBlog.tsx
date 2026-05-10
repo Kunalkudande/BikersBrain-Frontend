@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import {
-  FileText, Plus, Trash2, Eye, EyeOff, Pencil, Loader2, Save, X, Image as ImageIcon,
+  FileText, Plus, Trash2, Eye, EyeOff, Pencil, Loader2, Save, X, Image as ImageIcon, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,16 +55,27 @@ const generateSlug = (title: string) =>
 export default function AdminBlog() {
   const { toast } = useToast();
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [pagination, setPagination] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const pageSize = 20;
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (pg = page) => {
+    setLoading(true);
     try {
-      const res = await adminApi.getBlogPosts();
-      setPosts((res.data as BlogPost[]) || []);
+      const res = await adminApi.getBlogPosts({ page: pg, limit: pageSize });
+      const d = (res as any).data;
+      setPosts((d.items || d.posts || []) as BlogPost[]);
+      setPagination({
+        total: d.total,
+        totalPages: d.totalPages,
+        hasNext: d.hasNext,
+        hasPrev: d.hasPrev,
+      });
     } catch {
       toast({ title: "Failed to load blog posts", variant: "destructive" });
     } finally {
@@ -72,7 +83,7 @@ export default function AdminBlog() {
     }
   };
 
-  useEffect(() => { fetchPosts(); }, []);
+  useEffect(() => { fetchPosts(page); }, [page]);
 
   const openNew = () => {
     setEditingId(null);
@@ -121,7 +132,7 @@ export default function AdminBlog() {
       setShowEditor(false);
       setEditingId(null);
       setForm(emptyForm);
-      fetchPosts();
+      fetchPosts(page);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to save post";
       toast({ title: msg, variant: "destructive" });
@@ -135,7 +146,7 @@ export default function AdminBlog() {
     try {
       await adminApi.deleteBlogPost(id);
       toast({ title: "Post deleted" });
-      fetchPosts();
+      fetchPosts(page);
     } catch {
       toast({ title: "Failed to delete", variant: "destructive" });
     }
@@ -311,7 +322,9 @@ export default function AdminBlog() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Blog Posts</h1>
-          <p className="text-sm text-white/40 mt-1">{posts.length} post{posts.length !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-white/40 mt-1">
+            {(pagination?.total ?? posts.length)} post{(pagination?.total ?? posts.length) !== 1 ? "s" : ""} total
+          </p>
         </div>
         <Button onClick={openNew} className="bg-orange-500 hover:bg-orange-600 text-white gap-2">
           <Plus size={16} /> New Post
@@ -402,6 +415,28 @@ export default function AdminBlog() {
           </div>
         )}
       </div>
+
+      {pagination && (
+        <div className="p-4 border-t border-border flex items-center justify-end gap-2">
+          <button
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={!pagination.hasPrev}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs text-white/80 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={14} /> Prev
+          </button>
+          <span className="text-xs text-muted-foreground px-1">
+            {page} / {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setPage((current) => current + 1)}
+            disabled={!pagination.hasNext}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs text-white/80 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

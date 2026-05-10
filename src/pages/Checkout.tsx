@@ -143,7 +143,8 @@ export default function Checkout() {
   // Fetch COD availability from site settings
   useEffect(() => {
     settingsApi.getPublic().then((res) => {
-      if (res.data?.cod_enabled === "false") {
+      const settings = res.data as { cod_enabled?: string } | undefined;
+      if (settings?.cod_enabled === "false") {
         setCodAvailable(false);
         setPaymentMethod("RAZORPAY");
       }

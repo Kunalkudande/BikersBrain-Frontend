@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Tag, Plus, Trash2, ToggleLeft, ToggleRight, Calendar, Percent, Loader2, X } from "lucide-react";
+import { Tag, Plus, Trash2, ToggleLeft, ToggleRight, Calendar, Percent, Loader2, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,15 +41,21 @@ const inputCls =
 export default function AdminCoupons() {
   const { toast } = useToast();
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [pagination, setPagination] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const pageSize = 20;
 
-  const fetchCoupons = async () => {
+  const fetchCoupons = async (pg = page) => {
+    setLoading(true);
     try {
-      const res = await adminApi.getCoupons();
-      setCoupons((res.data as Coupon[]) || []);
+      const res = await adminApi.getCoupons({ page: pg, limit: pageSize });
+      const d = (res as any).data;
+      setCoupons((d.items || d.coupons || []) as Coupon[]);
+      setPagination({ total: d.total, totalPages: d.totalPages, hasNext: d.hasNext, hasPrev: d.hasPrev });
     } catch {
       toast({ title: "Failed to load coupons", variant: "destructive" });
     } finally {
@@ -57,7 +63,7 @@ export default function AdminCoupons() {
     }
   };
 
-  useEffect(() => { fetchCoupons(); }, []);
+  useEffect(() => { fetchCoupons(page); }, [page]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +87,7 @@ export default function AdminCoupons() {
       toast({ title: "Coupon created!" });
       setForm(emptyForm);
       setShowForm(false);
-      fetchCoupons();
+      fetchCoupons(page);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to create coupon";
       toast({ title: msg, variant: "destructive" });
@@ -93,7 +99,7 @@ export default function AdminCoupons() {
   const handleToggle = async (id: string) => {
     try {
       await adminApi.toggleCoupon(id);
-      fetchCoupons();
+      fetchCoupons(page);
     } catch {
       toast({ title: "Failed to toggle coupon", variant: "destructive" });
     }
@@ -104,7 +110,7 @@ export default function AdminCoupons() {
     try {
       await adminApi.deleteCoupon(id);
       toast({ title: "Coupon deleted" });
-      fetchCoupons();
+      fetchCoupons(page);
     } catch {
       toast({ title: "Failed to delete coupon", variant: "destructive" });
     }
@@ -124,7 +130,9 @@ export default function AdminCoupons() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Coupons</h1>
-          <p className="text-sm text-white/40 mt-1">{coupons.length} coupon{coupons.length !== 1 ? "s" : ""} total</p>
+          <p className="text-sm text-white/40 mt-1">
+            {(pagination?.total ?? coupons.length)} coupon{(pagination?.total ?? coupons.length) !== 1 ? "s" : ""} total
+          </p>
         </div>
         <Button
           onClick={() => setShowForm(!showForm)}
@@ -370,6 +378,29 @@ export default function AdminCoupons() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {pagination && (
+        <div className="p-4 border-t border-border flex items-center justify-end gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={!pagination.hasPrev}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs text-white/80 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={14} /> Prev
+          </button>
+          <span className="text-xs text-muted-foreground px-1">
+            {page} / {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={!pagination.hasNext}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs text-white/80 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

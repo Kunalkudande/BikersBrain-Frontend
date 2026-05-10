@@ -367,7 +367,7 @@ export default function AdminVisitors() {
           <Clock size={18} className="text-primary" />
           <h2 className="font-semibold text-white">Visitor Sessions</h2>
           <span className="text-xs text-muted-foreground ml-2">
-            Page {stats.visitorsPagination.page} of {stats.visitorsPagination.totalPages} · {stats.visitorsPagination.total} total
+              Page {stats.visitorsPagination.page} of {stats.visitorsPagination.totalPages} · {stats.visitorsPagination.total} total
           </span>
         </div>
         <div className="overflow-x-auto">

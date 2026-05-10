@@ -333,27 +333,25 @@ export default function AdminProducts() {
       </div>
 
       {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-white/30">
-            Page {page} of {pagination.totalPages} · {pagination.total} total
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              disabled={!pagination.hasPrev}
-              onClick={() => setPage((p) => p - 1)}
-              className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.07] text-white/50 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              disabled={!pagination.hasNext}
-              onClick={() => setPage((p) => p + 1)}
-              className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.07] text-white/50 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
+      {pagination && (
+        <div className="p-4 border-t border-border flex items-center justify-end gap-2">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={!pagination.hasPrev}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs text-white/80 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={14} /> Prev
+          </button>
+          <span className="text-xs text-muted-foreground px-1">
+            {page} / {pagination.totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={!pagination.hasNext}
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-border text-xs text-white/80 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next <ChevronRight size={14} />
+          </button>
         </div>
       )}
 
