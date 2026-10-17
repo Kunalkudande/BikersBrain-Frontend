@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BulkOrderModal from "@/components/BulkOrderModal";
 import SEO, { productJsonLd, breadcrumbJsonLd } from "@/components/SEO";
+import { readProductDetails, type ProductDetail as ExtraDetail } from "@/lib/productDetails";
 import { productsApi } from "@/lib/api";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -42,6 +43,7 @@ interface Review {
 }
 
 interface Specification {
+  details?: ExtraDetail[] | null;
   weight: string;
   material: string;
   certifications: string[];
@@ -593,24 +595,13 @@ export default function ProductDetail() {
                   <div className="bg-card rounded-lg border border-border p-4">
                     <h4 className="font-semibold mb-3">General</h4>
                     <dl className="space-y-2 text-sm">
-                      <div className="flex justify-between"><dt className="text-muted-foreground">Weight</dt><dd>{product.specifications.weight}</dd></div>
-                      <div className="flex justify-between"><dt className="text-muted-foreground">Material</dt><dd>{product.specifications.material}</dd></div>
-                      <div className="flex justify-between"><dt className="text-muted-foreground">Visor</dt><dd>{product.specifications.visorType}</dd></div>
-                      <div className="flex justify-between"><dt className="text-muted-foreground">Ventilation</dt><dd>{product.specifications.ventilation ? "Yes" : "No"}</dd></div>
+                      {readProductDetails(product.specifications, "", product.category).map(detail => (
+                        <div key={detail.label} className="flex justify-between gap-4"><dt className="text-muted-foreground">{detail.label}</dt><dd className="text-right whitespace-pre-wrap break-words min-w-0">{detail.value}</dd></div>
+                      ))}
                       <div className="flex justify-between"><dt className="text-muted-foreground">SKU</dt><dd>{product.sku}</dd></div>
                     </dl>
                   </div>
                   <div>
-                    {product.specifications.certifications.length > 0 && (
-                      <div className="bg-card rounded-lg border border-border p-4 mb-4">
-                        <h4 className="font-semibold mb-3">Certifications</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {product.specifications.certifications.map(c => (
-                            <Badge key={c} variant="secondary" className="gap-1"><Check className="h-3 w-3 text-success" />{c}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                     {product.specifications.features.length > 0 && (
                       <div className="bg-card rounded-lg border border-border p-4">
                         <h4 className="font-semibold mb-3">Features</h4>

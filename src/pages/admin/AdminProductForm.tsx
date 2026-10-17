@@ -2,11 +2,12 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { adminApi } from "@/lib/api";
+import { getSpecConfig, getDetailFields, readProductDetails, type ProductDetail } from "@/lib/productDetails";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft, Save, Upload, X, Plus, Trash2, Star, ImageIcon,
-  Package, Tag, Layers, Settings2, Weight, ChevronDown,
-  Sparkles, Loader2, RefreshCw, ArrowUp, ArrowDown,
+  Package, Layers, Settings2, ChevronDown,
+  Sparkles, Loader2, ArrowUp, ArrowDown,
 } from "lucide-react";
 
 /* ── Constants ── */
@@ -18,185 +19,9 @@ const COMMON_COLORS = [
   "Orange", "Green", "Grey", "Silver", "Fluo Yellow", "Fluo Orange",
 ];
 
-/* ── Category-aware specs config ── */
-interface SpecConfig {
-  title: string;
-  desc: string;
-  weightLabel: string;
-  weightPlaceholder: string;
-  materialLabel: string;
-  materials: string[];
-  visorLabel: string;
-  visorOptions: string[];
-  showVisor: boolean;
-  ventilationLabel: string;
-  showVentilation: boolean;
-  certLabel: string;
-  certifications: string[];
-}
-
-const SPEC_CONFIGS: Record<string, SpecConfig> = {
-  Helmets: {
-    title: "Helmet Specifications",
-    desc: "Safety ratings, shell & visor details",
-    weightLabel: "Weight",
-    weightPlaceholder: "e.g. 1.2 kg",
-    materialLabel: "Shell Material",
-    materials: ["ABS", "Polycarbonate", "Fiberglass", "Carbon Fiber", "Kevlar Composite", "Thermoplastic"],
-    visorLabel: "Visor Type",
-    visorOptions: ["Clear", "Tinted", "Smoke", "Iridium", "Pinlock Ready", "Anti-fog", "Double Visor", "None"],
-    showVisor: true,
-    ventilationLabel: "Ventilation",
-    showVentilation: true,
-    certLabel: "Certifications",
-    certifications: ["ISI", "DOT", "ECE 22.05", "ECE 22.06", "SNELL", "FIM", "SHARP 5-Star"],
-  },
-  "Riding Gear": {
-    title: "Gear Specifications",
-    desc: "Material, protection & fit details",
-    weightLabel: "Weight",
-    weightPlaceholder: "e.g. 650g",
-    materialLabel: "Material",
-    materials: ["Leather", "Textile", "Mesh", "Cordura", "Polyester", "Nylon", "Kevlar", "Gore-Tex", "Drystar"],
-    visorLabel: "Protection Level",
-    visorOptions: ["CE Level 1", "CE Level 2", "D3O", "Knox", "SAS-TEC", "Foam", "None"],
-    showVisor: true,
-    ventilationLabel: "Waterproof",
-    showVentilation: true,
-    certLabel: "Certifications & Standards",
-    certifications: ["CE", "EN 13594", "EN 13595", "EN 17092", "EN 13634"],
-  },
-  Oil: {
-    title: "Oil Specifications",
-    desc: "Grade, volume & engine compatibility",
-    weightLabel: "Volume",
-    weightPlaceholder: "e.g. 1L / 500ml",
-    materialLabel: "Oil Type",
-    materials: ["Mineral", "Semi-Synthetic", "Fully Synthetic", "Gear Oil", "Fork Oil", "Chain Lube", "Coolant"],
-    visorLabel: "Viscosity Grade",
-    visorOptions: ["10W-30", "10W-40", "10W-50", "15W-40", "15W-50", "20W-40", "20W-50", "5W-40", "75W-90", "80W-90", "N/A"],
-    showVisor: true,
-    ventilationLabel: "Suitable for 4-Stroke",
-    showVentilation: true,
-    certLabel: "API / JASO Standards",
-    certifications: ["JASO MA", "JASO MA2", "JASO MB", "API SL", "API SN", "API SM", "API SG"],
-  },
-  "Spare Parts": {
-    title: "Part Specifications",
-    desc: "Compatibility & technical details",
-    weightLabel: "Weight",
-    weightPlaceholder: "e.g. 350g",
-    materialLabel: "Material",
-    materials: ["Steel", "Aluminium", "Rubber", "Plastic", "Carbon Fiber", "Brass", "Chrome", "Cast Iron"],
-    visorLabel: "Fitment",
-    visorOptions: [],
-    showVisor: false,
-    ventilationLabel: "OEM Compatible",
-    showVentilation: true,
-    certLabel: "Standards",
-    certifications: ["OEM", "Aftermarket", "ISO Certified"],
-  },
-  "Luggage & Touring": {
-    title: "Luggage Specifications",
-    desc: "Capacity, mounting & weather protection",
-    weightLabel: "Weight",
-    weightPlaceholder: "e.g. 1.5 kg",
-    materialLabel: "Material",
-    materials: ["Nylon", "Polyester", "Cordura", "Semi-Hard", "Hard Case", "Aluminium", "Canvas", "PVC"],
-    visorLabel: "Capacity",
-    visorOptions: ["5-10L", "10-20L", "20-30L", "30-40L", "40-50L", "50L+"],
-    showVisor: true,
-    ventilationLabel: "Waterproof",
-    showVentilation: true,
-    certLabel: "Features",
-    certifications: ["Reflective", "Rain Cover Included", "Quick Release", "Lockable", "Expandable"],
-  },
-  Electronics: {
-    title: "Electronics Specifications",
-    desc: "Power, connectivity & compatibility",
-    weightLabel: "Weight",
-    weightPlaceholder: "e.g. 200g",
-    materialLabel: "Build Material",
-    materials: ["Plastic", "Metal", "Rubber", "ABS", "Aluminium", "Silicone"],
-    visorLabel: "Connectivity",
-    visorOptions: ["Bluetooth 5.0", "Bluetooth 5.3", "USB-C", "Wired", "WiFi", "N/A"],
-    showVisor: true,
-    ventilationLabel: "Waterproof (IP Rating)",
-    showVentilation: true,
-    certLabel: "Certifications",
-    certifications: ["CE", "FCC", "RoHS", "IP65", "IP67", "BIS"],
-  },
-  Accessories: {
-    title: "Accessory Specifications",
-    desc: "Details & compatibility",
-    weightLabel: "Weight",
-    weightPlaceholder: "e.g. 250g",
-    materialLabel: "Material",
-    materials: ["Plastic", "Metal", "Rubber", "Nylon", "Leather", "Silicone", "Carbon Fiber", "Neoprene"],
-    visorLabel: "Type",
-    visorOptions: [],
-    showVisor: false,
-    ventilationLabel: "Universal Fit",
-    showVentilation: true,
-    certLabel: "Standards",
-    certifications: ["CE", "ISO", "OEM", "RoHS"],
-  },
-};
-
-/* Map individual category values to spec config keys */
-const CATEGORY_TO_SPEC: Record<string, string> = {
-  // Helmets
-  FULL_FACE: "Helmets", HALF_FACE: "Helmets", OPEN_FACE: "Helmets",
-  MODULAR: "Helmets", OFF_ROAD: "Helmets", KIDS: "Helmets", LADIES: "Helmets",
-  // Riding Gear
-  JACKETS: "Riding Gear", GLOVES: "Riding Gear", BOOTS: "Riding Gear", RIDING_PANTS: "Riding Gear",
-  // Individual categories
-  PARTS: "Spare Parts", SPARE_PARTS: "Spare Parts",
-  LUGGAGE: "Luggage & Touring",
-  ELECTRONICS: "Electronics",
-  ACCESSORIES: "Accessories",
-  OIL: "Oil", OILS: "Oil", ENGINE_OIL: "Oil",
-};
-
-const DEFAULT_SPEC_CONFIG: SpecConfig = {
-  title: "Product Specifications",
-  desc: "Technical details & features",
-  weightLabel: "Weight / Dimensions",
-  weightPlaceholder: "e.g. 500g / 20x10x5 cm",
-  materialLabel: "Material",
-  materials: ["Plastic", "Metal", "Rubber", "Leather", "Nylon", "Silicon", "Glass", "Carbon Fiber"],
-  visorLabel: "Type / Variant",
-  visorOptions: [],
-  showVisor: false,
-  ventilationLabel: "Premium Quality",
-  showVentilation: true,
-  certLabel: "Certifications",
-  certifications: ["CE", "ISO", "OEM", "RoHS"],
-};
-
-/** Find the best spec config — checks category value first, then group name */
-function getSpecConfig(group: string, categoryValue?: string): SpecConfig {
-  // 1. Direct match by category value (most precise)
-  if (categoryValue) {
-    const mappedKey = CATEGORY_TO_SPEC[categoryValue.toUpperCase()];
-    if (mappedKey && SPEC_CONFIGS[mappedKey]) return SPEC_CONFIGS[mappedKey];
-  }
-  // 2. Exact match by group name
-  if (SPEC_CONFIGS[group]) return SPEC_CONFIGS[group];
-  // 3. Fuzzy match on group name
-  const lower = group.toLowerCase();
-  for (const [key, config] of Object.entries(SPEC_CONFIGS)) {
-    if (lower.includes(key.toLowerCase()) || key.toLowerCase().includes(lower)) return config;
-  }
-  return DEFAULT_SPEC_CONFIG;
-}
-
 /* ── Types ── */
 interface VariantRow { id: string; size: string; color: string; stock: string; additionalPrice: string; }
-interface SpecsState {
-  weight: string; material: string; certifications: string[];
-  visorType: string; ventilation: boolean; features: string[];
-}
+interface SpecsState { features: string[]; }
 interface ImgEntry {
   id: string; file?: File; preview: string;
   uploading?: boolean; isPrimary?: boolean;
@@ -209,7 +34,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 const TABS = [
   { key: "basic" as const, label: "Basic Info", icon: Package },
   { key: "images" as const, label: "Images", icon: ImageIcon },
-  { key: "specs" as const, label: "Specifications", icon: Settings2 },
+  { key: "specs" as const, label: "Extra Details", icon: Settings2 },
   { key: "variants" as const, label: "Variants", icon: Layers },
 ];
 
@@ -340,12 +165,23 @@ export default function AdminProductForm() {
   const [discountPrice, setDiscountPrice] = useState("");
   const [stock, setStock] = useState("");
   const [sku, setSku] = useState("");
+  const [customSku, setCustomSku] = useState(false);
+  const [skuSuffix] = useState(() => Array.from(crypto.getRandomValues(new Uint8Array(6)), byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase());
+  const skuPart = (text: string, max: number) => text.trim().toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, max).replace(/-$/g, "");
+  const automaticSku = name.trim() ? `BB-${skuPart(brand, 10) || "PRD"}-${skuPart(name, 16) || "ITEM"}-${skuSuffix}` : "";
+  const effectiveSku = isEdit || customSku ? sku.trim() : automaticSku;
 
   const [images, setImages] = useState<ImgEntry[]>([]);
-  const [specs, setSpecs] = useState<SpecsState>({
-    weight: "", material: "", certifications: [],
-    visorType: "", ventilation: true, features: [],
-  });
+  const [specs, setSpecs] = useState<SpecsState>({ features: [] });
+  const [detailsByCategory, setDetailsByCategory] = useState<Record<string, ProductDetail[]>>({});
+  const details = detailsByCategory[category] || [];
+  const detailFields = getDetailFields(selectedGroup, category);
+  const setDetails = (next: ProductDetail[]) => setDetailsByCategory(prev => ({ ...prev, [category]: next }));
+  const setDetailValue = (label: string, value: string) => {
+    if (!value.trim()) { setDetails(details.filter(detail => detail.custom || detail.label !== label)); return; }
+    const index = details.findIndex(detail => !detail.custom && detail.label === label);
+    setDetails(index < 0 ? [...details, { label, value }] : details.map((detail, i) => i === index ? { ...detail, value } : detail));
+  };
   const [newFeature, setNewFeature] = useState("");
   const [variants, setVariants] = useState<VariantRow[]>([]);
 
@@ -375,14 +211,8 @@ export default function AdminProductForm() {
         setSku(p.sku || "");
 
         if (p.specifications) {
-          setSpecs({
-            weight: p.specifications.weight || "",
-            material: p.specifications.material || "",
-            certifications: p.specifications.certifications || [],
-            visorType: p.specifications.visorType || "",
-            ventilation: p.specifications.ventilation !== false,
-            features: p.specifications.features || [],
-          });
+          setDetailsByCategory({ [p.category]: readProductDetails(p.specifications, "", p.category) });
+          setSpecs({ features: p.specifications.features || [] });
         }
 
         if (p.variants?.length) {
@@ -432,16 +262,13 @@ export default function AdminProductForm() {
       setPrice(d.price ? String(d.price) : price);
       setDiscountPrice(d.discountPrice ? String(d.discountPrice) : discountPrice);
       setStock(d.stock ? String(d.stock) : stock);
-      setSku(d.sku || sku);
+      // Keep the automatic SKU or the admin's custom SKU; AI must not replace it.
       if (d.specifications) {
-        setSpecs({
-          weight: d.specifications.weight || "",
-          material: d.specifications.material || "",
-          certifications: d.specifications.certifications || [],
-          visorType: d.specifications.visorType || "",
-          ventilation: d.specifications.ventilation !== false,
-          features: d.specifications.features || [],
-        });
+        const targetCategory = d.category || category;
+        // AI suggestions never supply boolean claims automatically.
+        const suggested = readProductDetails(d.specifications, "", targetCategory).filter(detail => !["Yes", "No"].includes(detail.value));
+        setDetailsByCategory(prev => ({ ...prev, [targetCategory]: prev[targetCategory]?.length ? prev[targetCategory] : suggested }));
+        setSpecs({ features: d.specifications.features || [] });
       }
       if (d.variants?.length) {
         setVariants(d.variants.map((v: any) => ({
@@ -532,11 +359,17 @@ export default function AdminProductForm() {
     if (!price || parseFloat(price) <= 0) e.price = "Enter a valid price";
     if (discountPrice && parseFloat(discountPrice) >= parseFloat(price)) e.discountPrice = "Must be less than price";
     if (stock === "" || parseInt(stock) < 0) e.stock = "Enter valid stock (≥ 0)";
-    if (!sku || sku.length < 3) e.sku = "Min 3 characters";
+    if (!effectiveSku || effectiveSku.length < 3) e.sku = "Min 3 characters";
+    const nonEmptyDetails = details.filter(detail => detail.label.trim() || detail.value.trim());
+    const labels = nonEmptyDetails.map(detail => detail.label.trim().toLowerCase());
+    if (nonEmptyDetails.some(detail => !detail.label.trim() || !detail.value.trim())) e.details = "Enter both a name and value, or remove the unfinished detail.";
+    else if (new Set(labels).size !== labels.length) e.details = "Each detail must have a unique name.";
+    else if (nonEmptyDetails.length > 50 || nonEmptyDetails.some(detail => detail.label.trim().length > 100 || detail.value.trim().length > 1000)) e.details = "Use up to 50 details, with names under 100 characters and values under 1,000 characters.";
     setErrors(e);
     if (Object.keys(e).length > 0) {
       if (e.name || e.brand || e.category || e.description || e.price || e.discountPrice || e.stock || e.sku)
         setActiveTab("basic");
+      if (e.details) setActiveTab("specs");
       toast({ title: "Fix the highlighted errors", variant: "destructive" });
     }
     return Object.keys(e).length === 0;
@@ -550,21 +383,17 @@ export default function AdminProductForm() {
     try {
       const payload: Record<string, unknown> = {
         name, brand, category, description,
-        price: parseFloat(price), stock: parseInt(stock), sku,
+        price: parseFloat(price), stock: parseInt(stock), sku: effectiveSku,
       };
       if (discountPrice) payload.discountPrice = parseFloat(discountPrice);
 
-      const hasSpecs = specs.weight || specs.material || specs.visorType || specs.certifications.length;
-      if (hasSpecs) {
-        payload.specifications = {
-          weight: specs.weight || "N/A",
-          material: specs.material || "N/A",
-          certifications: specs.certifications,
-          visorType: specs.visorType || "N/A",
-          ventilation: specs.ventilation,
-          features: specs.features,
-        };
-      }
+      // An explicit empty list clears details without restoring legacy values.
+      payload.specifications = {
+        details: details.filter(detail => detail.label.trim() && detail.value.trim()).map(detail => ({ label: detail.label.trim(), value: detail.value.trim() })),
+        features: specs.features,
+        certifications: [],
+        weight: "N/A", material: "N/A", visorType: "N/A", ventilation: false,
+      };
 
       if (variants.length > 0) {
         payload.variants = variants.map((v) => ({
@@ -767,9 +596,11 @@ export default function AdminProductForm() {
                   className={inputCls(!!errors.brand)} placeholder="e.g. Brand name" />
               </Field>
 
-              <Field label="SKU *" error={errors.sku}>
-                <input value={sku} onChange={(e) => setSku(e.target.value)}
-                  className={inputCls(!!errors.sku)} placeholder="e.g. PRD-001-BLK" />
+              <Field label="SKU" error={errors.sku}>
+                <input aria-label="SKU" value={effectiveSku} onChange={(e) => { setCustomSku(true); setSku(e.target.value); }}
+                  className={inputCls(!!errors.sku)} placeholder="Generated from product name" />
+                <p className="text-[11px] text-white/40 mt-1">{isEdit ? "Existing SKU is preserved when product details change." : "Generated automatically. You can enter your own SKU."}</p>
+                {!isEdit && customSku && <button type="button" onClick={() => { setCustomSku(false); setErrors(prev => ({ ...prev, sku: "" })); }} className="mt-1 text-xs text-orange-400">Use automatic SKU</button>}
               </Field>
 
               <Field label="Category *" error={errors.category}>
@@ -902,107 +733,40 @@ export default function AdminProductForm() {
 
         {/* ──────── SPECIFICATIONS ──────── */}
         {activeTab === "specs" && (
-          <Section icon={Settings2} title={specConfig.title} desc={specConfig.desc}>
-            {!selectedGroup && (
-              <div className="mt-4 px-4 py-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm text-amber-400">
-                Select a category first to see relevant specification fields.
-              </div>
-            )}
+          <Section icon={Settings2} title="Extra Details" desc="Optional information specific to this product">
+            {!category ? (
+              <p className="mt-4 text-sm text-amber-400">Select a category in Basic Info to see relevant fields.</p>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <Field label={specConfig.weightLabel}>
-                <input value={specs.weight} onChange={(e) => setSpecs({ ...specs, weight: e.target.value })}
-                  className={inputCls()} placeholder={specConfig.weightPlaceholder} />
-              </Field>
-
-              <Field label={specConfig.materialLabel}>
-                {specConfig.materials.length > 0 ? (
-                  <select value={specs.material} onChange={(e) => setSpecs({ ...specs, material: e.target.value })}
-                    className={inputCls()}>
-                    <option value="">Select {specConfig.materialLabel.toLowerCase()}...</option>
-                    {specConfig.materials.map((m) => <option key={m} value={m}>{m}</option>)}
-                  </select>
-                ) : (
-                  <input value={specs.material} onChange={(e) => setSpecs({ ...specs, material: e.target.value })}
-                    className={inputCls()} placeholder={`Enter ${specConfig.materialLabel.toLowerCase()}`} />
-                )}
-              </Field>
-
-              {specConfig.showVisor && (
-                <Field label={specConfig.visorLabel}>
-                  {specConfig.visorOptions.length > 0 ? (
-                    <select value={specs.visorType} onChange={(e) => setSpecs({ ...specs, visorType: e.target.value })}
-                      className={inputCls()}>
-                      <option value="">Select...</option>
-                      {specConfig.visorOptions.map((v) => <option key={v} value={v}>{v}</option>)}
-                    </select>
-                  ) : (
-                    <input value={specs.visorType} onChange={(e) => setSpecs({ ...specs, visorType: e.target.value })}
-                      className={inputCls()} placeholder={`Enter ${specConfig.visorLabel.toLowerCase()}`} />
-                  )}
-                </Field>
-              )}
-
-              {specConfig.showVentilation && (
-                <Field label={specConfig.ventilationLabel}>
-                  <div className="flex items-center gap-3 h-[42px]">
-                    <button
-                      type="button"
-                      onClick={() => setSpecs({ ...specs, ventilation: true })}
-                      className={cn(
-                        "flex-1 py-2 rounded-xl text-sm font-medium border transition",
-                        specs.ventilation
-                          ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
-                          : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/15"
-                      )}
-                    >Yes</button>
-                    <button
-                      type="button"
-                      onClick={() => setSpecs({ ...specs, ventilation: false })}
-                      className={cn(
-                        "flex-1 py-2 rounded-xl text-sm font-medium border transition",
-                        !specs.ventilation
-                          ? "bg-red-500/15 border-red-500/30 text-red-400"
-                          : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/15"
-                      )}
-                    >No</button>
+              <p className="sm:col-span-2 text-sm text-white/50">{specConfig.desc}. Leave anything you cannot confirm blank.</p>
+              {errors.details && <p role="alert" className="sm:col-span-2 text-sm text-red-400">{errors.details}</p>}
+              {detailFields.map(field => {
+                const value = details.find(detail => !detail.custom && detail.label === field.label)?.value || "";
+                return (
+                  <Field key={field.label} label={field.label}>
+                    {field.options ? (
+                      <select aria-label={field.label} value={value} onChange={e => setDetailValue(field.label, e.target.value)} className={inputCls()}>
+                        <option value="">Not specified</option>
+                        {!field.options.includes(value) && value && <option value={value}>{value}</option>}
+                        {field.options.map(option => <option key={option} value={option}>{option}</option>)}
+                      </select>
+                    ) : (
+                      <input aria-label={field.label} value={value} onChange={e => setDetailValue(field.label, e.target.value)} className={inputCls()} placeholder={field.placeholder || "Optional"} maxLength={1000} />
+                    )}
+                  </Field>
+                );
+              })}
+              <div className="sm:col-span-2 space-y-3">
+                <h4 className="text-sm text-white/70">Other details</h4>
+                {details.map((detail, index) => !detail.custom && detailFields.some(field => field.label === detail.label) ? null : (
+                  <div key={index} className="flex gap-2">
+                    <input aria-label={`Detail ${index + 1} name`} className={inputCls()} placeholder="e.g. Warranty" maxLength={100} value={detail.label} onChange={e => setDetails(details.map((row, i) => i === index ? { ...row, label: e.target.value } : row))} />
+                    <input aria-label={`Detail ${index + 1} value`} className={inputCls()} placeholder="e.g. 1 year" maxLength={1000} value={detail.value} onChange={e => setDetails(details.map((row, i) => i === index ? { ...row, value: e.target.value } : row))} />
+                    <button type="button" aria-label={`Remove ${detail.label || "detail"}`} className="p-2 text-white/40 hover:text-red-400" onClick={() => setDetails(details.filter((_, i) => i !== index))}><Trash2 size={16} /></button>
                   </div>
-                </Field>
-              )}
-
-              {/* Certifications / Standards */}
-              {specConfig.certifications.length > 0 && (
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
-                    {specConfig.certLabel}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {specConfig.certifications.map((c) => {
-                      const active = specs.certifications.includes(c);
-                      return (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setSpecs((prev) => ({
-                            ...prev,
-                            certifications: active
-                              ? prev.certifications.filter((x) => x !== c)
-                              : [...prev.certifications, c],
-                          }))}
-                          className={cn(
-                            "px-3 py-1.5 rounded-lg text-xs font-semibold border transition",
-                            active
-                              ? "bg-orange-500/15 border-orange-500/30 text-orange-400"
-                              : "bg-white/[0.03] border-white/[0.07] text-white/30 hover:border-white/20 hover:text-white/50"
-                          )}
-                        >
-                          {c}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
+                ))}
+                <button type="button" disabled={details.length >= 50} className="flex items-center gap-2 text-sm text-orange-400 disabled:opacity-50" onClick={() => setDetails([...details, { label: "", value: "", custom: true }])}><Plus size={15} /> Add another detail</button>
+              </div>
               {/* Features */}
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
@@ -1055,6 +819,7 @@ export default function AdminProductForm() {
                 )}
               </div>
             </div>
+            )}
           </Section>
         )}
 
