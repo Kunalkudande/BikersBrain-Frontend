@@ -58,6 +58,12 @@ npm run preview
 
 Backend verification: `npm run build` and `npx ts-node tests/seo.validation.ts`.
 
+## Search logo and brand previews
+
+The existing brain logo is packaged into square, opaque dark icons (#121212) to match the website header. `favicon.ico` is a real ICO container; `favicon.png` is 96×96, with 192×192 and 512×512 versions and a 180×180 Apple touch icon. The organization logo is `brand-logo.png` on white; the default social preview is 1200×630. Regenerate these from the existing source logo with `npm run assets:brand`.
+
+After deploying, use Search Console URL Inspection to request indexing for `https://bikersbrain.in/`. Keep favicon URLs stable. Google may take days or weeks to refresh a favicon or site name and chooses the final search appearance. The website cannot change Google's dark-mode page background. See [Google's favicon guidance](https://developers.google.com/search/docs/appearance/favicon-in-search) and [site-name guidance](https://developers.google.com/search/docs/appearance/site-names).
+
 ## References
 
 - [Google: JavaScript SEO](https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics)

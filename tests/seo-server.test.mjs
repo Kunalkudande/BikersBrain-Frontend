@@ -44,9 +44,17 @@ test("catalog and blog pagination have real href links and distinct canonical UR
 
 test("home renders catalog links, product content and all real category links", () => {
   const result = render({ url: "/", status: 200, categories, products: { items: [product], total: 1, totalPages: 1 } });
-  const doc = new JSDOM(result.html).window.document;
+  const doc = new JSDOM(result.head + result.html).window.document;
   assert.ok(doc.querySelector('nav[aria-label="All product categories"] a[href="/products?category=COILS"]'));
   assert.ok(doc.querySelector('a[href="/products/ignition-coil"]'));
+  assert.equal(doc.title, "BikersBrain | Two-Wheeler Parts & Accessories");
+  const schemas = [...doc.querySelectorAll('script[type="application/ld+json"]')].map(script => JSON.parse(script.textContent));
+  const website = schemas.find(schema => schema["@type"] === "WebSite");
+  assert.equal(website.name, "BikersBrain");
+  assert.ok(website.alternateName.includes("Bikers Brain"));
+  assert.equal(schemas.find(schema => schema["@type"] === "Organization").logo.url, "https://bikersbrain.in/brand-logo.png");
+  assert.equal(doc.querySelector('meta[property="og:image:width"]').content, "1200");
+  assert.equal(doc.querySelector('meta[property="og:image:height"]').content, "630");
 });
 
 test("unknown URLs and missing products return 404 data rather than indexable empty content", async () => {

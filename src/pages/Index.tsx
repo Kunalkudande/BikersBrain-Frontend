@@ -16,7 +16,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Buy Two-Wheeler Spare Parts, Helmets & Riding Gear Online"
+        title="BikersBrain | Two-Wheeler Parts & Accessories"
+        noSuffix
         description="Shop two-wheeler spare parts, ignition coils, clutch plates, engine oils, helmets and accessories at BikersBrain. Visit our Pune store or shop online."
         canonical="/"
         keywords="buy bike spare parts online India, two wheeler accessories, motorcycle helmets online, riding gear India, engine oil for bikes, genuine bike parts, BikersBrain"

@@ -105,3 +105,11 @@ describe("admin extra details flow", () => {
     expect(adminApi.createProduct).not.toHaveBeenCalled();
   });
 });
+
+it("saves a zero low-stock threshold without replacing it with the default", async () => {
+  await openForm(); fillBasics();
+  fireEvent.change(screen.getByRole("spinbutton", { name: "Low-stock alert level" }), { target: { value: "0" } });
+  fireEvent.click(screen.getAllByRole("button", { name: "Create Product" })[0]);
+  await waitFor(() => expect(adminApi.createProduct).toHaveBeenCalled());
+  expect(vi.mocked(adminApi.createProduct).mock.calls[0][0].lowStockThreshold).toBe(0);
+});

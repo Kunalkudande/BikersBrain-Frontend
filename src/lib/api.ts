@@ -378,6 +378,11 @@ export const adminApi = {
     return request(`/products/admin/list${qs}`);
   },
 
+  getLowStock: (params: Record<string, string | number> = {}) => request(`/products/admin/low-stock?${new URLSearchParams(Object.entries(params).map(([key, value]) => [key, String(value)]))}`),
+  duplicateProduct: (id: string) => request(`/products/admin/${id}/duplicate`, { method: 'POST' }),
+  previewProductImport: (rows: { row: number; values: Record<string, string> }[]) => request('/products/admin/import/preview', { method: 'POST', body: JSON.stringify({ rows }) }),
+  commitProductImport: (token: string) => request('/products/admin/import/commit', { method: 'POST', body: JSON.stringify({ token }) }),
+
   getProductBySlug: (slug: string) =>
     request(`/products/admin/${encodeURIComponent(slug)}`),
 

@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { adminApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
+  Copy,
+  Upload,
   Plus,
   Pencil,
   Trash2,
@@ -44,6 +46,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function AdminProducts() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const lowOnly = searchParams.get("stock") === "low";
   const { toast } = useToast();
 
   const [products, setProducts] = useState<any[]>([]);
@@ -55,51 +59,44 @@ export default function AdminProducts() {
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const firstRender = useRef(true);
-  const pageMounted = useRef(false);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  const fetchProducts = useCallback(async (pg = page, q = search) => {
-    setLoading(true);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
+  const [alertCount, setAlertCount] = useState(0);
+  const [loadError, setLoadError] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const requestId = useRef(0);
+  const fetchProducts = useCallback(async (pg: number, q: string, low: boolean) => {
+    const request = ++requestId.current;
+    setLoading(true); setLoadError("");
     try {
-      const params: Record<string, string | number | undefined> = { page: pg, limit: 15 };
-      if (q) params.search = q;
-      const res = await adminApi.getProducts(params);
-      const d = (res as any).data;
-      setProducts(d.items || []);
-      setPagination({
-        total: d.total,
-        totalPages: d.totalPages,
-        hasNext: d.hasNext,
-        hasPrev: d.hasPrev,
-      });
-    } catch {
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
+      const [res, alerts] = await Promise.all([
+        low ? adminApi.getLowStock({ page: pg, limit: 15, search: q }) : adminApi.getProducts({ page: pg, limit: 15, search: q || undefined }),
+        adminApi.getLowStock({ limit: 1 }),
+      ]);
+      if (request !== requestId.current) return;
+      const d = res.data as any;
+      setProducts(d.items || []); setPagination(d); setAlertCount((alerts.data as any).total || 0);
+    } catch (e: any) {
+      if (request === requestId.current) { setProducts([]); setLoadError(e.message || "Could not load products."); }
+    } finally { if (request === requestId.current) setLoading(false); }
   }, []);
 
   useEffect(() => {
-    fetchProducts(1, "");
-  }, []);
-
-  // Debounced search
-  useEffect(() => {
-    if (firstRender.current) { firstRender.current = false; return; }
-    clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => {
-      setPage(1);
-      fetchProducts(1, search);
-    }, 400);
-    return () => clearTimeout(searchTimer.current);
+    const timer = setTimeout(() => { setDebouncedSearch(search); setPage(1); }, 350);
+    return () => clearTimeout(timer);
   }, [search]);
+  useEffect(() => { fetchProducts(page, debouncedSearch, lowOnly); return () => { requestId.current++; }; }, [page, debouncedSearch, lowOnly, fetchProducts]);
 
-  // Re-fetch when page changes (skip the initial mount)
-  useEffect(() => {
-    if (!pageMounted.current) { pageMounted.current = true; return; }
-    fetchProducts(page, search);
-  }, [page]);
+  const handleDuplicate = async (product: any) => {
+    if (duplicatingId) return;
+    setDuplicatingId(product.id);
+    try {
+      const response = await adminApi.duplicateProduct(product.id);
+      const copy = response.data as { slug: string };
+      toast({ title: "Product copied", description: "New SKU generated. The copy is hidden with zero stock; review it before activating." });
+      navigate(`/admin/products/${copy.slug}/edit`);
+    } catch (e: any) { toast({ title: "Could not duplicate product", description: e.message, variant: "destructive" }); }
+    finally { setDuplicatingId(null); }
+  };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -108,7 +105,7 @@ export default function AdminProducts() {
       await adminApi.deleteProduct(deleteTarget.id);
       toast({ title: "Product deleted", description: deleteTarget.name });
       setDeleteTarget(null);
-      fetchProducts(page, search);
+      fetchProducts(page, debouncedSearch, lowOnly);
     } catch (e: any) {
       toast({ title: "Delete failed", description: e.message, variant: "destructive" });
     } finally {
@@ -124,7 +121,7 @@ export default function AdminProducts() {
         title: product.isActive ? "Product deactivated" : "Product activated",
         description: product.name,
       });
-      fetchProducts(page, search);
+      fetchProducts(page, debouncedSearch, lowOnly);
     } catch (e: any) {
       toast({ title: "Update failed", description: e.message, variant: "destructive" });
     } finally {
@@ -149,6 +146,8 @@ export default function AdminProducts() {
             {pagination?.total ?? 0} products in catalog
           </p>
         </div>
+        <div className="flex flex-wrap gap-3">
+        <button onClick={() => navigate("/admin/products/import")} className="inline-flex items-center gap-2 px-4 py-2.5 border border-white/10 bg-white/5 text-white rounded-xl text-sm"><Upload size={16} /> Bulk upload</button>
         <button
           onClick={() => navigate("/admin/products/new")}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/25 transition-all duration-200 text-sm"
@@ -156,7 +155,14 @@ export default function AdminProducts() {
           <Plus size={17} />
           Add Product
         </button>
+        </div>
       </div>
+
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+        <AlertTriangle size={17} className="text-amber-400" /><p className="text-sm text-white/70 flex-1">{alertCount} active product{alertCount === 1 ? "" : "s"} need restocking. Includes low-stock variants.</p>
+        <button aria-pressed={lowOnly} onClick={() => { setPage(1); setSearchParams(lowOnly ? {} : { stock: "low" }); }} className="text-sm text-orange-400 underline">{lowOnly ? "Show all products" : "View low-stock alerts"}</button>
+      </div>
+      {loadError && <p role="alert" className="text-sm text-red-400">{loadError}</p>}
 
       {/* Search + Refresh */}
       <div className="flex gap-3">
@@ -171,7 +177,7 @@ export default function AdminProducts() {
           />
         </div>
         <button
-          onClick={() => fetchProducts(page, search)}
+          onClick={() => fetchProducts(page, debouncedSearch, lowOnly)}
           className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.03] border border-white/[0.07] rounded-xl text-sm font-medium text-white/40 hover:bg-white/5 hover:text-white/60 transition"
         >
           <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
@@ -225,6 +231,8 @@ export default function AdminProducts() {
               <tbody className="divide-y divide-white/[0.04]">
                 {products.map((p) => {
                   const imgUrl = getImage(p);
+                  const inventoryStock = p.inventoryStock ?? p.stock;
+                  const isLow = p.inventoryStatus === "low" || (!p.inventoryStatus && inventoryStock <= (p.lowStockThreshold ?? 5));
                   return (
                     <tr key={p.id} className="hover:bg-white/[0.02] transition group">
                       {/* Product */}
@@ -276,16 +284,18 @@ export default function AdminProducts() {
                         <span
                           className={cn(
                             "inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg",
-                            p.stock === 0
+                            inventoryStock === 0
                               ? "bg-red-500/10 text-red-400"
-                              : p.stock <= 5
+                              : isLow
                               ? "bg-amber-500/10 text-amber-400"
                               : "bg-emerald-500/10 text-emerald-400"
                           )}
                         >
-                          {p.stock === 0 && <AlertTriangle size={10} />}
-                          {p.stock === 0 ? "Out of stock" : `${p.stock} units`}
+                          {inventoryStock === 0 && <AlertTriangle size={10} />}
+                          {inventoryStock === 0 ? "Out of stock" : `${inventoryStock} units`}
                         </span>
+                        <p className="text-[10px] text-white/30 mt-1">Alert at {p.lowStockThreshold ?? 5}{p.lowStockVariants?.length ? ` · ${p.lowStockVariants.length} option(s) low` : ""}</p>
+                        {p.lowStockVariants?.length > 0 && <details className="text-[11px] text-amber-400 mt-1"><summary className="cursor-pointer">View options</summary>{p.lowStockVariants.map((v: any) => <p key={v.id}>{v.size} / {v.color}: {v.stock} left</p>)}</details>}
                       </td>
                       {/* Status toggle */}
                       <td className="px-4 py-3.5">
@@ -307,6 +317,7 @@ export default function AdminProducts() {
                       {/* Actions */}
                       <td className="pr-5 pl-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button aria-label={`Duplicate ${p.name}`} title="Duplicate product" disabled={duplicatingId !== null} onClick={() => handleDuplicate(p)} className="p-2 rounded-lg bg-white/[0.03] hover:bg-orange-500/10 text-white/40 hover:text-orange-400 transition disabled:opacity-40">{duplicatingId === p.id ? <RefreshCw size={14} className="animate-spin" /> : <Copy size={14} />}</button>
                           <button
                             onClick={() => navigate(`/admin/products/${p.slug}/edit`)}
                             className="p-2 rounded-lg bg-white/[0.03] hover:bg-blue-500/10 text-white/30 hover:text-blue-400 transition"

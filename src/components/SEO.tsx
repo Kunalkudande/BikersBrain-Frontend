@@ -66,6 +66,9 @@ export default function SEO({
       <meta property="og:type" content={ogType} />
       {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
       <meta property="og:image" content={absoluteUrl(ogImage)} />
+      {ogImage === DEFAULT_OG_IMAGE && <meta property="og:image:width" content="1200" />}
+      {ogImage === DEFAULT_OG_IMAGE && <meta property="og:image:height" content="630" />}
+      <meta property="og:image:alt" content={ogImage === DEFAULT_OG_IMAGE ? "BikersBrain — Spare and Accessories, Shree Om Automobiles, Pune" : title} />
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="en_IN" />
 

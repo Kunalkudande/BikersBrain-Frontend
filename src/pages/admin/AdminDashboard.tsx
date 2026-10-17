@@ -226,7 +226,7 @@ export default function AdminDashboard() {
               <p className="text-xs text-white/30 mt-0.5">Products needing restock</p>
             </div>
             <Link
-              to="/admin/products"
+              to="/admin/products?stock=low"
               className="text-sm font-medium text-orange-500 hover:text-orange-400 transition"
             >
               Manage
@@ -260,18 +260,18 @@ export default function AdminDashboard() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-white truncate">{p.name}</p>
+                      <Link to={`/admin/products/${p.slug}/edit`} className="text-xs font-semibold text-white truncate block hover:text-orange-400">{p.name}</Link>
                       <p className="text-[10px] text-white/30">{p.sku}</p>
                     </div>
                     <span
                       className={cn(
                         "text-xs font-bold px-2 py-0.5 rounded-lg",
-                        p.stock === 0
+                        p.inventoryStock === 0
                           ? "bg-red-500/10 text-red-400"
                           : "bg-amber-500/10 text-amber-400"
                       )}
                     >
-                      {p.stock === 0 ? "Out" : `${p.stock} left`}
+                      {p.inventoryStock === 0 ? "Out" : p.lowStockVariants?.length ? `${p.lowStockVariants.length} options low` : `${p.inventoryStock ?? p.stock} left`}
                     </span>
                   </div>
                 );

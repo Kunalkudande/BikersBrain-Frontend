@@ -1,0 +1,20 @@
+import { beforeEach, afterEach, expect, it, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import AdminProducts from './AdminProducts';
+import { adminApi } from '@/lib/api';
+vi.mock('@/lib/api', () => ({ adminApi: { getProducts: vi.fn(), getLowStock: vi.fn(), duplicateProduct: vi.fn() } }));
+vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));
+const data = { items: [{ id: 'coil', name: 'Coil', slug: 'coil', brand: 'Test', category: 'PARTS', stock: 50, inventoryStock: 20, lowStockThreshold: 5, inventoryStatus: 'low', lowStockVariants: [{ id: 'variant', size: 'L', color: 'Black', stock: 0 }], price: 650, isActive: true, images: [] }], total: 1, totalPages: 1 };
+beforeEach(() => { vi.clearAllMocks(); vi.mocked(adminApi.getProducts).mockResolvedValue({ success: true, data } as never); vi.mocked(adminApi.getLowStock).mockResolvedValue({ success: true, data } as never); vi.mocked(adminApi.duplicateProduct).mockResolvedValue({ success: true, data: { slug: 'coil-copy' } } as never); });
+afterEach(cleanup);
+it('shows variant stock alerts and opens the new copied product for review', async () => {
+  render(<MemoryRouter initialEntries={['/admin/products']}><Routes><Route path="/admin/products" element={<AdminProducts />} /><Route path="/admin/products/:slug/edit" element={<p>Copied product editor</p>} /></Routes></MemoryRouter>);
+  expect(await screen.findByText('20 units')).toBeInTheDocument();
+  expect(screen.getByText('Alert at 5 · 1 option(s) low')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'View low-stock alerts' }));
+  await waitFor(() => expect(adminApi.getLowStock).toHaveBeenCalledWith({ page: 1, limit: 15, search: '' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Duplicate Coil' }));
+  await screen.findByText('Copied product editor');
+  expect(adminApi.duplicateProduct).toHaveBeenCalledWith('coil');
+});

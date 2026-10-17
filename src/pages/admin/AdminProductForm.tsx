@@ -20,7 +20,7 @@ const COMMON_COLORS = [
 ];
 
 /* ── Types ── */
-interface VariantRow { id: string; size: string; color: string; stock: string; additionalPrice: string; }
+interface VariantRow { id: string; variantId?: string; size: string; color: string; stock: string; additionalPrice: string; }
 interface SpecsState { features: string[]; }
 interface ImgEntry {
   id: string; file?: File; preview: string;
@@ -164,6 +164,7 @@ export default function AdminProductForm() {
   const [price, setPrice] = useState("");
   const [discountPrice, setDiscountPrice] = useState("");
   const [stock, setStock] = useState("");
+  const [lowStockThreshold, setLowStockThreshold] = useState("5");
   const [sku, setSku] = useState("");
   const [customSku, setCustomSku] = useState(false);
   const [skuSuffix] = useState(() => Array.from(crypto.getRandomValues(new Uint8Array(6)), byte => byte.toString(16).padStart(2, "0")).join("").toUpperCase());
@@ -209,6 +210,7 @@ export default function AdminProductForm() {
         setDiscountPrice(p.discountPrice ? String(Number(p.discountPrice)) : "");
         setStock(p.stock !== undefined ? String(p.stock) : "");
         setSku(p.sku || "");
+        setLowStockThreshold(String(p.lowStockThreshold ?? 5));
 
         if (p.specifications) {
           setDetailsByCategory({ [p.category]: readProductDetails(p.specifications, "", p.category) });
@@ -217,7 +219,7 @@ export default function AdminProductForm() {
 
         if (p.variants?.length) {
           setVariants(p.variants.map((v: any) => ({
-            id: uid(),
+            id: uid(), variantId: v.id,
             size: v.size || "M",
             color: v.color || "Matt Black",
             stock: String(v.stock ?? 0),
@@ -359,6 +361,7 @@ export default function AdminProductForm() {
     if (!price || parseFloat(price) <= 0) e.price = "Enter a valid price";
     if (discountPrice && parseFloat(discountPrice) >= parseFloat(price)) e.discountPrice = "Must be less than price";
     if (stock === "" || parseInt(stock) < 0) e.stock = "Enter valid stock (≥ 0)";
+    if (!/^\d+$/.test(lowStockThreshold) || Number(lowStockThreshold) > 1000000) e.lowStockThreshold = "Enter a whole number from 0 to 1,000,000";
     if (!effectiveSku || effectiveSku.length < 3) e.sku = "Min 3 characters";
     const nonEmptyDetails = details.filter(detail => detail.label.trim() || detail.value.trim());
     const labels = nonEmptyDetails.map(detail => detail.label.trim().toLowerCase());
@@ -367,7 +370,7 @@ export default function AdminProductForm() {
     else if (nonEmptyDetails.length > 50 || nonEmptyDetails.some(detail => detail.label.trim().length > 100 || detail.value.trim().length > 1000)) e.details = "Use up to 50 details, with names under 100 characters and values under 1,000 characters.";
     setErrors(e);
     if (Object.keys(e).length > 0) {
-      if (e.name || e.brand || e.category || e.description || e.price || e.discountPrice || e.stock || e.sku)
+      if (e.name || e.brand || e.category || e.description || e.price || e.discountPrice || e.stock || e.sku || e.lowStockThreshold)
         setActiveTab("basic");
       if (e.details) setActiveTab("specs");
       toast({ title: "Fix the highlighted errors", variant: "destructive" });
@@ -383,7 +386,7 @@ export default function AdminProductForm() {
     try {
       const payload: Record<string, unknown> = {
         name, brand, category, description,
-        price: parseFloat(price), stock: parseInt(stock), sku: effectiveSku,
+        price: parseFloat(price), stock: parseInt(stock), sku: effectiveSku, lowStockThreshold: Number(lowStockThreshold),
       };
       if (discountPrice) payload.discountPrice = parseFloat(discountPrice);
 
@@ -395,8 +398,9 @@ export default function AdminProductForm() {
         weight: "N/A", material: "N/A", visorType: "N/A", ventilation: false,
       };
 
-      if (variants.length > 0) {
+      if (variants.length > 0 || isEdit) {
         payload.variants = variants.map((v) => ({
+          ...(v.variantId ? { id: v.variantId } : {}),
           size: v.size, color: v.color,
           stock: parseInt(v.stock) || 0,
           additionalPrice: parseFloat(v.additionalPrice) || 0,
@@ -621,6 +625,11 @@ export default function AdminProductForm() {
               <Field label="Stock *" error={errors.stock}>
                 <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)}
                   className={inputCls(!!errors.stock)} placeholder="e.g. 50" />
+              </Field>
+
+              <Field label="Low-stock alert level" error={errors.lowStockThreshold}>
+                <input aria-label="Low-stock alert level" type="number" min="0" max="1000000" step="1" value={lowStockThreshold} onChange={e => setLowStockThreshold(e.target.value)} className={inputCls(!!errors.lowStockThreshold)} />
+                <p className="text-[11px] text-white/40 mt-1">Alert when stock reaches this level or below. Applies to each variant. Set 0 for out-of-stock alerts only.</p>
               </Field>
 
               <Field label="Price (₹) *" error={errors.price}>

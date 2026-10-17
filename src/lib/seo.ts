@@ -40,9 +40,9 @@ export function organizationJsonLd() {
     "@type": "Organization",
     "@id": `${SITE_URL}/#organization`,
     name: "BikersBrain",
-    alternateName: "Shree Om Automobiles",
+    alternateName: ["Bikers Brain", "Shree Om Automobiles"],
     url: SITE_URL,
-    logo: `${SITE_URL}/favicon.png`,
+    logo: { "@type": "ImageObject", url: `${SITE_URL}/brand-logo.png`, width: 512, height: 512 },
     description: DEFAULT_DESCRIPTION,
     address: {
       "@type": "PostalAddress",
@@ -98,21 +98,17 @@ export function localBusinessJsonLd() {
   };
 }
 
-/** WebSite schema with SearchAction for sitelinks search box */
+/** Explicit site identity helps Google distinguish the store from generic riding topics. */
 export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "BikersBrain",
-    url: SITE_URL,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${SITE_URL}/products?search={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    "@id": `${SITE_URL}/#website`,
+    name: SITE_NAME,
+    alternateName: ["Bikers Brain", "bikersbrain.in"],
+    url: `${SITE_URL}/`,
+    inLanguage: "en-IN",
+    publisher: { "@id": `${SITE_URL}/#organization` },
   };
 }
 
@@ -222,7 +218,9 @@ export function articleJsonLd(post: {
       name: "BikersBrain",
       logo: {
         "@type": "ImageObject",
-        url: `${SITE_URL}/favicon.png`,
+        url: `${SITE_URL}/brand-logo.png`,
+        width: 512,
+        height: 512,
       },
     },
     mainEntityOfPage: {

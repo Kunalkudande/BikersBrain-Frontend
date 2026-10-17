@@ -15,7 +15,7 @@ createServer(async (req, res) => {
     req.url = `/api/discovery?name=${encodeURIComponent(url.pathname.slice(1))}`;
     await discovery(req, res); return;
   }
-  if (/^\/(?:assets\/|favicon\.|og-image\.|store-image\.|placeholder\.|robots\.txt$)/.test(url.pathname)) {
+  if (/^\/(?:assets\/|favicon(?:-\d+)?\.|apple-touch-icon\.|brand-logo\.|og-image\.|store-image\.|placeholder\.|robots\.txt$)/.test(url.pathname)) {
     const target = resolve(root, "." + decodeURIComponent(url.pathname));
     if (!target.startsWith(root + sep)) { res.statusCode = 404; res.end(); return; }
     try { res.setHeader("Content-Type", mime[extname(target)] || "application/octet-stream"); res.end(await readFile(target)); }
