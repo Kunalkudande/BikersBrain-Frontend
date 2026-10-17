@@ -239,7 +239,7 @@ const FeaturedGear = () => {
                   return (
                     <motion.div
                       key={product.id}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={false}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: Math.min(i * 0.05, 0.3) }}

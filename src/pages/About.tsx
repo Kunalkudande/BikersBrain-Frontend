@@ -8,7 +8,7 @@ const values = [
   { icon: Shield, title: "100% Genuine", desc: "Every product is sourced directly from authorized distributors and trusted brands." },
   { icon: Award, title: "Quality Assured", desc: "We stock only products that meet strict quality and safety standards." },
   { icon: Truck, title: "Fast Delivery", desc: "Pan-India delivery within 3-7 business days with real-time tracking." },
-  { icon: Users, title: "25,000+ Customers", desc: "A growing community of two-wheeler enthusiasts trusting us for their needs." },
+  { icon: Users, title: "For Everyday Riders", desc: "Parts, riding gear and accessories for motorcycle and scooter owners." },
   { icon: Wrench, title: "Expert Support", desc: "Our team helps you find the right part or accessory for your ride." },
   { icon: Star, title: "Easy Returns", desc: "3-day hassle-free return and exchange policy on all products." },
 ];
@@ -33,14 +33,14 @@ export default function About() {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent" />
           <div className="container mx-auto px-4 relative text-center">
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               className="font-oswald text-4xl md:text-5xl font-bold uppercase mb-4"
             >
               About <span className="text-primary">BikersBrain</span>
             </motion.h1>
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="text-muted-foreground max-w-2xl mx-auto text-lg"
@@ -90,7 +90,7 @@ export default function About() {
               {values.map((v, i) => (
                 <motion.div
                   key={v.title}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}

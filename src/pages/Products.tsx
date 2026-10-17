@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO, { breadcrumbJsonLd, itemListJsonLd } from "@/components/SEO";
+import { listingSeo, pageNumber } from "@/lib/seo";
+import { useStorefrontData } from "@/lib/storefrontData";
 import { productsApi } from "@/lib/api";
 import { useWishlist } from "@/hooks/useWishlist";
 
@@ -39,16 +41,17 @@ interface Product {
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const initialData = useStorefrontData();
+  const [products, setProducts] = useState<Product[]>(initialData?.products?.items || []);
+  const [total, setTotal] = useState(initialData?.products?.total || 0);
+  const [totalPages, setTotalPages] = useState(initialData?.products?.totalPages || 0);
+  const [isLoading, setIsLoading] = useState(!initialData?.products);
   const [brands, setBrands] = useState<string[]>([]);
-  const [categories, setCategories] = useState<{ value: string; label: string; parentId?: string | null; id?: string; sortOrder?: number }[]>([]);
+  const [categories, setCategories] = useState<{ value: string; label: string; parentId?: string | null; id?: string; sortOrder?: number; description?: string }[]>(initialData?.categories || []);
   const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const page = parseInt(searchParams.get("page") || "1");
+  const page = pageNumber(searchParams.get("page"));
   const category = searchParams.get("category") || "";
   const brand = searchParams.get("brand") || "";
   const search = searchParams.get("search") || "";
@@ -56,6 +59,14 @@ export default function Products() {
   const inStock = searchParams.get("inStock") || "";
 
   useEffect(() => {
+    if (initialData?.products) {
+      setProducts(initialData.products.items);
+      setTotal(initialData.products.total);
+      setTotalPages(initialData.products.totalPages);
+      setIsLoading(false);
+      return;
+    }
+    let active = true;
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
@@ -72,19 +83,20 @@ export default function Products() {
         if (inStock) params.inStock = "true";
 
         const res = await productsApi.list(params);
-        if (res.success) {
+        if (active && res.success) {
           const d = res.data as any;
           setProducts(d.items || []);
           setTotal(d.total || 0);
           setTotalPages(d.totalPages || 0);
         }
       } catch {
-        setProducts([]);
+        if (active) setProducts([]);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
     fetchProducts();
+    return () => { active = false; };
   }, [page, category, brand, search, sort, inStock]);
 
   useEffect(() => {
@@ -95,7 +107,7 @@ export default function Products() {
 
   useEffect(() => {
     productsApi.getCategories().then((res) => {
-      if (res.success) setCategories((res.data as { value: string; label: string; parentId?: string | null; id?: string; sortOrder?: number }[]) || []);
+      if (res.success) setCategories((res.data as { value: string; label: string; parentId?: string | null; id?: string; sortOrder?: number; description?: string }[]) || []);
     }).catch(() => {});
   }, []);
 
@@ -118,6 +130,7 @@ export default function Products() {
 
   // SEO: build per-page title and description
   const categoryLabel = category ? categories.find(c => c.value === category)?.label || category.replace(/_/g, " ") : "";
+  const categoryDescription = categories.find(c => c.value === category)?.description;
   const seoTitle = category
     ? `Buy ${categoryLabel} Online India — Two-Wheeler ${categoryLabel}`
     : search
@@ -127,15 +140,21 @@ export default function Products() {
     ? `Shop genuine ${categoryLabel.toLowerCase()} for motorcycles & scooters at BikersBrain. 100% authentic, fast delivery across India. Free shipping over ₹2,999.`
     : search
     ? `Showing results for "${search}" — browse genuine bike spare parts, helmets, riding gear & accessories at BikersBrain.`
-    : "Browse 1000+ genuine two-wheeler spare parts, motorcycle helmets, riding gear, engine oils & accessories. Filter by brand, category & price. Free shipping over ₹2,999.";
-  const seoCanonical = category ? `/products?category=${category}` : "/products";
+    : "Browse two-wheeler spare parts, ignition coils, clutch plates, helmets, engine oils and accessories. Find products by category and brand at BikersBrain.";
+  const { canonical: seoCanonical, noIndex } = listingSeo(searchParams);
+  const pageUrl = (targetPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    if (targetPage > 1) params.set("page", String(targetPage)); else params.delete("page");
+    return "/products" + (params.toString() ? `?${params}` : "");
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={seoTitle}
+        title={seoTitle + (page > 1 ? ` — Page ${page}` : "")}
         description={seoDescription}
         canonical={seoCanonical}
+        noIndex={noIndex || (!isLoading && products.length === 0)}
         keywords={`buy ${categoryLabel.toLowerCase() || "bike spare parts"} online, two wheeler ${categoryLabel.toLowerCase() || "accessories"}, motorcycle parts India, genuine bike accessories`}
         jsonLd={[
           breadcrumbJsonLd([
@@ -157,6 +176,7 @@ export default function Products() {
                 <h1 className="font-oswald text-3xl md:text-4xl font-bold uppercase">
                   {category ? categories.find(c => c.value === category)?.label || "Products" : search ? `Results for "${search}"` : "All Products"}
                 </h1>
+                {category && <p className="text-muted-foreground mt-3 max-w-2xl text-sm">{categoryDescription || `Browse ${categoryLabel.toLowerCase()} and check each product’s size, specifications and bike compatibility before ordering.`} <Link to="/contact" className="text-primary underline">Need help finding the right fit?</Link></p>}
                 <p className="text-muted-foreground mt-1">
                   {total} product{total !== 1 ? "s" : ""} found
                 </p>
@@ -341,7 +361,7 @@ export default function Products() {
                     {products.map((product, i) => (
                       <motion.div
                         key={product.id}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={false}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
                       >
@@ -429,13 +449,7 @@ export default function Products() {
                   {/* Pagination */}
                   {totalPages > 1 && (
                     <div className="flex items-center justify-center gap-2 mt-10">
-                      <Button
-                        variant="outline"
-                        disabled={page <= 1}
-                        onClick={() => updateParams("page", String(page - 1))}
-                      >
-                        Previous
-                      </Button>
+                      {page > 1 ? <Button variant="outline" asChild><Link rel="prev" to={pageUrl(page - 1)}>Previous</Link></Button> : <Button variant="outline" disabled>Previous</Button>}
                       {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                         const p = page <= 3 ? i + 1 : page + i - 2;
                         if (p < 1 || p > totalPages) return null;
@@ -443,20 +457,14 @@ export default function Products() {
                           <Button
                             key={p}
                             variant={p === page ? "default" : "outline"}
-                            onClick={() => updateParams("page", String(p))}
+                            asChild
                             className="w-10"
                           >
-                            {p}
+                            <Link to={pageUrl(p)} aria-current={p === page ? "page" : undefined} aria-label={`Page ${p}`}>{p}</Link>
                           </Button>
                         );
                       })}
-                      <Button
-                        variant="outline"
-                        disabled={page >= totalPages}
-                        onClick={() => updateParams("page", String(page + 1))}
-                      >
-                        Next
-                      </Button>
+                      {page < totalPages ? <Button variant="outline" asChild><Link rel="next" to={pageUrl(page + 1)}>Next</Link></Button> : <Button variant="outline" disabled>Next</Button>}
                     </div>
                   )}
                 </>

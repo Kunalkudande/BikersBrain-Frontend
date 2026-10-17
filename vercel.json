@@ -1,39 +1,82 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/discovery?name=sitemap.xml"
+    },
+    {
+      "source": "/sitemap-:name.xml",
+      "destination": "/api/discovery?name=sitemap-:name.xml"
+    },
+    {
+      "source": "/merchant-feed.xml",
+      "destination": "/api/discovery?name=merchant-feed.xml"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/storefront?path=/$1"
+    }
   ],
   "headers": [
     {
-      "source": "/sitemap.xml",
-      "headers": [
-        { "key": "Content-Type", "value": "application/xml" },
-        { "key": "Cache-Control", "value": "public, max-age=86400, s-maxage=86400" }
-      ]
-    },
-    {
       "source": "/robots.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain" },
-        { "key": "Cache-Control", "value": "public, max-age=86400" }
+        {
+          "key": "Content-Type",
+          "value": "text/plain"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
       ]
     },
     {
       "source": "/assets/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/(.*).js",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/(.*).css",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/app-shell.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/storefront.mjs": {
+      "includeFiles": "{dist/app-shell.html,dist-ssr/**}",
+      "maxDuration": 30
+    },
+    "api/discovery.mjs": {
+      "maxDuration": 30
+    }
+  },
+  "trailingSlash": false,
+  "framework": "vite"
 }

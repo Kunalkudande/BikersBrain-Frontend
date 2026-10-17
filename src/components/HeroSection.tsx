@@ -12,7 +12,7 @@ const HeroSection = () => {
         src={heroBg}
         alt="Two-wheeler spare parts and riding gear from BikersBrain"
         className="absolute inset-0 w-full h-full object-cover object-center"
-        fetchPriority="high"
+        {...{ fetchpriority: "high" }}
         loading="eager"
         decoding="async"
         width={1920}
@@ -24,18 +24,18 @@ const HeroSection = () => {
 
       <div className="relative container mx-auto px-4 h-full flex items-center">
         <motion.div
-          initial={{ opacity: 0, x: -40 }}
+          initial={false}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7 }}
           className="max-w-lg"
         >
           <span className="inline-block px-3 py-1 bg-primary/20 text-primary text-xs font-barlow-condensed font-semibold tracking-widest uppercase rounded mb-4">
-            New Arrivals 2026
+            Parts, oils, gear & accessories
           </span>
           <h1 className="font-oswald text-4xl md:text-6xl font-bold leading-tight mb-4">
-            RIDE WITH
+            BIKE PARTS &
             <br />
-            <span className="text-primary">CONFIDENCE</span>
+            <span className="text-primary">ACCESSORIES</span>
           </h1>
           <p className="text-muted-foreground text-lg mb-8 max-w-md">
             Buy genuine two-wheeler spare parts, motorcycle helmets, riding gear, engine oils &amp; accessories online — at unbeatable prices with free shipping over ₹2,999.

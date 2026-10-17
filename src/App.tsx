@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { HelmetProvider } from "react-helmet-async";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -63,12 +63,25 @@ const queryClient = new QueryClient({
   },
 });
 
+// Reuse the public data returned with the initial HTML rather than show an empty grid.
+if (typeof window !== "undefined" && window.__STOREFRONT_DATA__) {
+  const data = window.__STOREFRONT_DATA__;
+  if (data.categories) queryClient.setQueryData(["categories-public"], { success: true, data: data.categories });
+  if (data.products && data.url.split("?")[0] === "/") queryClient.setQueryData(["products", "featured-gear"], { success: true, data: data.products });
+}
+
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
+}
+
+function PrivateRouteIndexing() {
+  const { pathname } = useLocation();
+  const privatePage = /^\/(admin|login|register|forgot-password|reset-password|cart|checkout|account|wishlist|order-success|track-order)(\/|$)/.test(pathname);
+  return privatePage ? <Helmet><meta name="robots" content="noindex, follow" /></Helmet> : null;
 }
 
 /**
@@ -105,6 +118,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <PrivateRouteIndexing />
               <VisitorTracker />
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>

@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEO, { articleJsonLd, breadcrumbJsonLd } from "@/components/SEO";
+import { useStorefrontData } from "@/lib/storefrontData";
 import { blogApi } from "@/lib/api";
 
 interface BlogPostDetail {
@@ -20,20 +21,28 @@ interface BlogPostDetail {
   author: string;
   publishedAt: string;
   tags: string[];
+  metaTitle?: string;
+  metaDesc?: string;
+  updatedAt?: string;
 }
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const [post, setPost] = useState<BlogPostDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialData = useStorefrontData();
+  const [post, setPost] = useState<BlogPostDetail | null>(initialData?.post || null);
+  const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
     if (!slug) return;
+    if (initialData?.post) { setPost(initialData.post); setLoading(false); return; }
+    let active = true;
+    setPost(null);
     setLoading(true);
     blogApi.getBySlug(slug)
-      .then((res) => { if (res.success) setPost(res.data as BlogPostDetail); })
+      .then((res) => { if (active && res.success) setPost(res.data as BlogPostDetail); })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [slug]);
 
   if (loading) {
@@ -55,9 +64,10 @@ export default function BlogPost() {
   if (!post) {
     return (
       <div className="min-h-screen bg-background">
+        <SEO title="Article Not Found" noIndex />
         <Header />
         <div className="container mx-auto px-4 py-20 text-center">
-          <h2 className="font-oswald text-2xl font-bold mb-4">Post Not Found</h2>
+          <h1 className="font-oswald text-2xl font-bold mb-4">Post Not Found</h1>
           <Link to="/blog">
             <button className="text-primary hover:underline">Back to Blog</button>
           </Link>
@@ -70,8 +80,8 @@ export default function BlogPost() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={post.title}
-        description={post.excerpt?.slice(0, 155) || `Read ${post.title} on the BikersBrain blog.`}
+        title={post.metaTitle || post.title}
+        description={post.metaDesc || post.excerpt?.slice(0, 155) || `Read ${post.title} on the BikersBrain blog.`}
         canonical={`/blog/${post.slug}`}
         ogType="article"
         ogImage={post.coverImage}
@@ -97,7 +107,7 @@ export default function BlogPost() {
         </nav>
 
         <motion.article
-          initial={{ opacity: 0, y: 20 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
           itemScope
           itemType="https://schema.org/Article"

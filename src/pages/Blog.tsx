@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { listingSeo, pageNumber } from "@/lib/seo";
+import { useStorefrontData } from "@/lib/storefrontData";
+import { useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Calendar, User, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -26,18 +28,36 @@ interface Category {
 }
 
 export default function Blog() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialData = useStorefrontData();
+  const selectedCategory = searchParams.get("category") || "";
+  const page = pageNumber(searchParams.get("page"));
+  const { canonical, noIndex } = listingSeo(searchParams, "/blog");
+  const blogUrl = (target: number, category = selectedCategory) => {
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    if (target > 1) params.set("page", String(target));
+    return "/blog" + (params.toString() ? `?${params}` : "");
+  };
+  const setSelectedCategory = (value: string) => { const params = new URLSearchParams(); if (value) params.set("category", value); setSearchParams(params); };
+
+  const [posts, setPosts] = useState<BlogPost[]>(initialData?.posts || []);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(!initialData?.posts);
+  const [totalPages, setTotalPages] = useState(initialData?.blogPagination?.totalPages || 1);
 
   useEffect(() => {
+    if (initialData?.posts) {
+      setPosts(initialData.posts);
+      setTotalPages(initialData.blogPagination?.totalPages || 1);
+      setLoading(false);
+      return;
+    }
+    let active = true;
     setLoading(true);
     blogApi.getAll({ page: String(page), category: selectedCategory || undefined, limit: '9' })
       .then((res) => {
-        if (res.success) {
+        if (active && res.success) {
           const posts = res.data as BlogPost[];
           const totalPages = res.pagination?.totalPages || 1;
           setPosts(posts || []);
@@ -45,7 +65,8 @@ export default function Blog() {
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [page, selectedCategory]);
 
   useEffect(() => {
@@ -57,9 +78,10 @@ export default function Blog() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Motorcycle Blog — Riding Tips, Gear Reviews & Bike Maintenance"
+        title={`Motorcycle Blog — Bike Maintenance & Riding Tips${page > 1 ? ` — Page ${page}` : ""}`}
         description="Read expert riding tips, helmet & gear reviews, motorcycle maintenance guides and two-wheeler culture from BikersBrain. Stay informed, ride safe."
-        canonical="/blog"
+        canonical={canonical}
+        noIndex={noIndex || (!loading && posts.length === 0)}
         keywords="motorcycle blog India, bike maintenance tips, helmet reviews, riding gear guide, two wheeler tips"
         jsonLd={breadcrumbJsonLd([
           { name: "Home", url: "/" },
@@ -85,7 +107,7 @@ export default function Blog() {
           {categories.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8">
               <button
-                onClick={() => { setSelectedCategory(""); setPage(1); }}
+                onClick={() => { setSelectedCategory(""); }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${!selectedCategory ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-secondary/80"}`}
               >
                 All Posts
@@ -93,7 +115,7 @@ export default function Blog() {
               {categories.map((cat) => (
                 <button
                   key={cat.name}
-                  onClick={() => { setSelectedCategory(cat.name); setPage(1); }}
+                  onClick={() => { setSelectedCategory(cat.name); }}
                   className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat.name ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-secondary/80"}`}
                 >
                   {cat.name}
@@ -122,7 +144,7 @@ export default function Blog() {
               {posts.map((post, i) => (
                 <motion.article
                   key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                 >
@@ -162,13 +184,15 @@ export default function Blog() {
           {totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-10">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
+                <Link
                   key={p}
-                  onClick={() => setPage(p)}
-                  className={`w-10 h-10 rounded-md text-sm font-semibold transition-colors ${p === page ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-secondary/80"}`}
+                  to={blogUrl(p)}
+                  aria-current={p === page ? "page" : undefined}
+                  aria-label={`Page ${p}`}
+                  className={`w-10 h-10 inline-flex items-center justify-center rounded-md text-sm font-semibold transition-colors ${p === page ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-secondary/80"}`}
                 >
                   {p}
-                </button>
+                </Link>
               ))}
             </div>
           )}

@@ -12,6 +12,7 @@ import Footer from "@/components/Footer";
 import BulkOrderModal from "@/components/BulkOrderModal";
 import SEO, { productJsonLd, breadcrumbJsonLd } from "@/components/SEO";
 import { readProductDetails, type ProductDetail as ExtraDetail } from "@/lib/productDetails";
+import { useStorefrontData } from "@/lib/storefrontData";
 import { productsApi } from "@/lib/api";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -84,16 +85,17 @@ interface RelatedProduct {
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const initialData = useStorefrontData();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { has: isWishlisted, toggle: toggleWishlist } = useWishlist();
   const { toast } = useToast();
 
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<Product | null>(initialData?.product || null);
   const [related, setRelated] = useState<RelatedProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialData);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(initialData?.product?.variants?.find((v: Variant) => v.stock > 0) || initialData?.product?.variants?.[0] || null);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
@@ -121,20 +123,39 @@ export default function ProductDetail() {
 
   useEffect(() => {
     if (!slug) return;
+    if (initialData?.product) {
+      setProduct(initialData.product);
+      setSelectedVariant(initialData.product.variants.find((v: Variant) => v.stock > 0) || initialData.product.variants[0] || null);
+      setSelectedImage(0);
+      setIsLoading(false);
+      return;
+    }
+    let active = true;
+    setProduct(null);
+    setSelectedVariant(null);
+    setSelectedImage(0);
     setIsLoading(true);
     productsApi.getBySlug(slug).then((res) => {
-      if (res.success) {
+      if (active && res.success) {
         const p = res.data as Product;
         setProduct(p);
         if (p.variants.length > 0) {
           setSelectedVariant(p.variants.find(v => v.stock > 0) || p.variants[0]);
         }
       }
-    }).catch(() => {}).finally(() => setIsLoading(false));
+    }).catch(() => {}).finally(() => { if (active) setIsLoading(false); });
 
-    productsApi.getRelated(slug).then((res) => {
-      if (res.success) setRelated((res.data as RelatedProduct[]) || []);
+    return () => { active = false; };
+  }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    let active = true;
+    setRelated([]);
+    productsApi.getRelated(slug).then(res => {
+      if (active && res.success) setRelated((res.data as RelatedProduct[]) || []);
     }).catch(() => {});
+    return () => { active = false; };
   }, [slug]);
 
   const handleAddToCart = async () => {
@@ -230,9 +251,10 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="min-h-screen bg-background">
+        <SEO title="Product Not Found" noIndex />
         <Header />
         <div className="container mx-auto px-4 py-20 text-center">
-          <h2 className="font-oswald text-2xl font-bold mb-4">Product Not Found</h2>
+          <h1 className="font-oswald text-2xl font-bold mb-4">Product Not Found</h1>
           <Link to="/products"><Button>Browse Products</Button></Link>
         </div>
         <Footer />
@@ -247,7 +269,7 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-background">
       <SEO
         title={`${product.name} — ${product.brand} | Buy Online`}
-        description={`Buy ${product.name} by ${product.brand} at ₹${(product.discountPrice || product.price).toLocaleString("en-IN")}. ${product.description?.slice(0, 100)}… 100% genuine. Free shipping over ₹2,999.`}
+        description={`Buy ${product.name} by ${product.brand}. ${product.description?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").slice(0, 120)}`.slice(0, 165)}
         canonical={`/products/${product.slug}`}
         ogType="product"
         ogImage={product.images?.[0]?.imageUrl}
@@ -293,12 +315,14 @@ export default function ProductDetail() {
                 >
                   <motion.img
                     key={selectedImage}
-                    initial={{ opacity: 0 }}
+                    initial={false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.2 }}
                     src={product.images[selectedImage]?.imageUrl || "https://placehold.co/800x800/1F2937/FF6B35?text=No+Image"}
                     alt={`${product.brand} ${product.name} — product image ${selectedImage + 1}`}
                     className="w-full h-full object-cover"
+                    {...{ fetchpriority: "high" }}
+                    loading="eager"
                     draggable={false}
                     width={800}
                     height={800}
@@ -589,7 +613,7 @@ export default function ProductDetail() {
               </div>
             </TabsContent>
 
-            <TabsContent value="specifications" className="mt-6">
+            <TabsContent forceMount value="specifications" className="mt-6 data-[state=inactive]:hidden">
               {product.specifications ? (
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="bg-card rounded-lg border border-border p-4">
@@ -622,7 +646,7 @@ export default function ProductDetail() {
               )}
             </TabsContent>
 
-            <TabsContent value="reviews" className="mt-6">
+            <TabsContent forceMount value="reviews" className="mt-6 data-[state=inactive]:hidden">
               {product.reviews.length === 0 ? (
                 <p className="text-muted-foreground text-center py-10">No reviews yet. Be the first to review!</p>
               ) : (

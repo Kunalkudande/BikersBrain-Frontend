@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
+import { useStorefrontData } from "@/lib/storefrontData";
 import { productsApi } from "@/lib/api";
 
 interface NavChild {
@@ -67,31 +68,9 @@ const STATIC_NAV_FALLBACK: NavItem[] = [
 // Duration (ms) before submenu closes when mouse leaves
 const SUBMENU_DELAY = 150;
 
-const Header = () => {
-  const navigate = useNavigate();
-  const { user, isAuthenticated, isAdmin, logout } = useAuth();
-  const { itemCount: cartCount } = useCart();
-  const { items: wishlistItems } = useWishlist();
-  const wishlistCount = wishlistItems.length;
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
-  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
-  const [mobileSubExpanded, setMobileSubExpanded] = useState<string | null>(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [navItems, setNavItems] = useState<NavItem[]>(STATIC_NAV_FALLBACK);
-  const searchRef = useRef<HTMLInputElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
-  const submenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Load categories and build nav groups dynamically
-  useEffect(() => {
-    productsApi.getCategories().then((res) => {
-      if (!res.success || !Array.isArray(res.data) || res.data.length === 0) return;
-      const cats = res.data as { id: string; value: string; label: string; group: string; parentId: string | null; sortOrder: number; groupSortOrder: number }[];
-
+type NavigationCategory = { id: string; value: string; label: string; group: string; parentId: string | null; sortOrder: number; groupSortOrder: number };
+function buildNavigation(cats: NavigationCategory[]): NavItem[] {
+  if (!cats?.length) return STATIC_NAV_FALLBACK;
       // Separate top-level and child categories
       const topLevel = cats.filter(c => !c.parentId);
       const children = cats.filter(c => c.parentId);
@@ -161,7 +140,34 @@ const Header = () => {
       dynamic.push({ label: "Brands", href: "/products" });
       dynamic.push({ label: "Sale", href: "/products?sale=true" });
 
-      setNavItems(dynamic);
+
+  return dynamic;
+}
+
+const Header = () => {
+  const navigate = useNavigate();
+  const initialData = useStorefrontData();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { itemCount: cartCount } = useCart();
+  const { items: wishlistItems } = useWishlist();
+  const wishlistCount = wishlistItems.length;
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [mobileSubExpanded, setMobileSubExpanded] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [navItems, setNavItems] = useState<NavItem[]>(() => buildNavigation(initialData?.categories || []));
+  const searchRef = useRef<HTMLInputElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  const submenuTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (initialData?.categories) return;
+    productsApi.getCategories().then(res => {
+      if (res.success && Array.isArray(res.data)) setNavItems(buildNavigation(res.data as NavigationCategory[]));
     }).catch(() => {});
   }, []);
 

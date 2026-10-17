@@ -5,6 +5,7 @@ import FeaturedGear from "@/components/FeaturedGear";
 import DealsBanner from "@/components/DealsBanner";
 import Newsletter from "@/components/Newsletter";
 import Footer from "@/components/Footer";
+import CategoryDirectory from "@/components/CategoryDirectory";
 import SEO, {
   organizationJsonLd,
   localBusinessJsonLd,
@@ -16,7 +17,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <SEO
         title="Buy Two-Wheeler Spare Parts, Helmets & Riding Gear Online"
-        description="India's #1 online store for genuine two-wheeler spare parts, motorcycle helmets, riding gear, engine oils & accessories. Free shipping over ₹2,999. Shop now!"
+        description="Shop two-wheeler spare parts, ignition coils, clutch plates, engine oils, helmets and accessories at BikersBrain. Visit our Pune store or shop online."
         canonical="/"
         keywords="buy bike spare parts online India, two wheeler accessories, motorcycle helmets online, riding gear India, engine oil for bikes, genuine bike parts, BikersBrain"
         jsonLd={[
@@ -30,6 +31,7 @@ const Index = () => {
         <HeroSection />
         <PromoBar />
         <FeaturedGear />
+        <CategoryDirectory />
         <DealsBanner />
         <Newsletter />
       </main>

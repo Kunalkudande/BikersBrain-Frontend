@@ -57,7 +57,7 @@ export default function Contact() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <motion.h1
-                initial={{ opacity: 0, y: 20 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 className="font-oswald text-3xl md:text-4xl font-bold uppercase mb-3"
               >
@@ -107,7 +107,7 @@ export default function Contact() {
               {/* Contact Form */}
               <div className="md:col-span-2">
                 <motion.form
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={false}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                   onSubmit={handleSubmit}
