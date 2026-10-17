@@ -1,3 +1,4 @@
+import { getAnalyticsSessionId, campaignParams } from './visitorSession';
 const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api`;
 
 interface ApiResponse<T = unknown> {
@@ -197,7 +198,7 @@ export const cartApi = {
 /* ─── Orders ─── */
 export const ordersApi = {
   create: (body: { addressId: string; paymentMethod: string; couponCode?: string; notes?: string }) =>
-    request('/orders', { method: 'POST', body: JSON.stringify(body) }),
+    request('/orders', { method: 'POST', body: JSON.stringify({ ...body, analyticsSessionId: getAnalyticsSessionId() }) }),
 
   createGuest: (body: {
     contact: { name: string; email: string; phone: string };
@@ -206,17 +207,17 @@ export const ordersApi = {
     paymentMethod: string;
     couponCode?: string;
     notes?: string;
-  }) => request('/orders/guest', { method: 'POST', body: JSON.stringify(body) }),
+  }) => request('/orders/guest', { method: 'POST', body: JSON.stringify({ ...body, analyticsSessionId: getAnalyticsSessionId() }) }),
 
   // Razorpay Magic Checkout (1CC) — no address needed upfront
   razorpayCheckout: (body: { couponCode?: string; notes?: string }) =>
-    request('/orders/razorpay-checkout', { method: 'POST', body: JSON.stringify(body) }),
+    request('/orders/razorpay-checkout', { method: 'POST', body: JSON.stringify({ ...body, analyticsSessionId: getAnalyticsSessionId() }) }),
 
   guestRazorpayCheckout: (body: {
     items: { productId: string; variantId?: string; quantity: number }[];
     couponCode?: string;
     notes?: string;
-  }) => request('/orders/guest/razorpay-checkout', { method: 'POST', body: JSON.stringify(body) }),
+  }) => request('/orders/guest/razorpay-checkout', { method: 'POST', body: JSON.stringify({ ...body, analyticsSessionId: getAnalyticsSessionId() }) }),
 
   verify1CCPayment: (body: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
     request('/orders/verify-1cc-payment', { method: 'POST', body: JSON.stringify(body) }),
@@ -461,8 +462,9 @@ export const adminApi = {
     request(`/blog/admin/${id}`, { method: 'DELETE' }),
 
   // Visitor analytics
-  getVisitorStats: (days = 30, page = 1, limit = 20) =>
-    request(`/admin/visitors?days=${days}&page=${page}&limit=${limit}`),
+  getVisitorStats: (days = 30, page = 1, limit = 20, includeBots = false) =>
+    request(`/admin/visitors?days=${days}&page=${page}&limit=${limit}&includeBots=${includeBots}`),
+  getVisitorJourney: (id: string, page = 1) => request(`/admin/visitors/${encodeURIComponent(id)}/journey?page=${page}`),
 
   // Settings
   getSettings: () => request('/admin/settings'),
@@ -471,12 +473,16 @@ export const adminApi = {
 };
 
 /* ─── Visitor Tracking ─── */
+// Keep events in navigation order, without blocking the storefront.
+let trackingQueue: Promise<unknown> = Promise.resolve();
 export const visitorApi = {
-  track: (page: string, sessionId: string, referrer?: string) =>
-    request('/visitors/track', {
-      method: 'POST',
-      body: JSON.stringify({ page, sessionId, referrer }),
-    }).catch(() => {}), // silently fail
+  track: (page: string, sessionId: string, referrer?: string, type: 'page_view' | 'add_to_cart' = 'page_view', productId?: string) => {
+    try {
+      const body = { page, sessionId, referrer, type, productId, eventId: crypto.randomUUID(), ...campaignParams() };
+      trackingQueue = trackingQueue.catch(() => {}).then(() => request('/visitors/track', { method: 'POST', body: JSON.stringify(body), signal: AbortSignal.timeout(8000) })).catch(() => {});
+      return trackingQueue;
+    } catch { return Promise.resolve(); }
+  },
 };
 
 export { ApiError, uploadFiles };

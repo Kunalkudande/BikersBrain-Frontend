@@ -5,11 +5,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import { WishlistProvider } from "@/hooks/useWishlist";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { visitorApi } from "@/lib/api";
+import { getAnalyticsSessionId, setAnalyticsExcluded } from "@/lib/visitorSession";
 
 // Eager-load the homepage for fastest first paint
 import Index from "./pages/Index";
@@ -86,24 +87,19 @@ function PrivateRouteIndexing() {
 }
 
 /**
- * Fires one tracking call per route change (sessionStorage-scoped id).
- * This keeps one session id while storing all visited pages.
+ * Tracks public route changes after authentication resolves.
+ * Browser-tab sessions expire after 30 minutes without tracked activity.
  */
 function VisitorTracker() {
   const location = useLocation();
+  const { isAdmin, isLoading } = useAuth();
 
   useEffect(() => {
-    // Skip tracking admin pages
-    if (location.pathname.startsWith("/admin")) return;
-
-    let sessionId = sessionStorage.getItem("bb_sid");
-    if (!sessionId) {
-      sessionId = crypto.randomUUID();
-      sessionStorage.setItem("bb_sid", sessionId);
-    }
-
-    visitorApi.track(location.pathname, sessionId, document.referrer || undefined);
-  }, [location.pathname]);
+    setAnalyticsExcluded(isAdmin || isLoading);
+    if (isLoading || isAdmin || /^\/(admin|api|login|register|forgot-password|reset-password|account|track-order|order-success)(\/|$)/.test(location.pathname)) return;
+    const sessionId = getAnalyticsSessionId();
+    if (sessionId) void visitorApi.track(location.pathname, sessionId, document.referrer || undefined);
+  }, [location.pathname, isAdmin, isLoading]);
 
   return null;
 }

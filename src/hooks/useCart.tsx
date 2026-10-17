@@ -1,5 +1,6 @@
 ﻿import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { cartApi, productsApi } from "@/lib/api";
+import { cartApi, productsApi, visitorApi } from "@/lib/api";
+import { getAnalyticsSessionId } from "@/lib/visitorSession";
 import { useAuth } from "./useAuth";
 
 const GUEST_CART_KEY = "bb_guest_cart";
@@ -57,7 +58,7 @@ function saveGuestCart(items: CartItem[]) {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const [cart, setCart] = useState<Cart | null>(null);
   const [guestItems, setGuestItems] = useState<CartItem[]>(loadGuestCart);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +89,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated]); // only fires when auth state changes
 
   const addItem = async (productId: string, quantity: number, variantId?: string, snapshot?: ProductSnapshot) => {
+    const recordCartAdd = () => {
+      if (isAdmin) return;
+      const sessionId = getAnalyticsSessionId();
+      if (sessionId) void visitorApi.track(window.location.pathname, sessionId, document.referrer || undefined, 'add_to_cart', productId);
+    };
     if (!isAuthenticated) {
       // Guest mode: store in localStorage
       let productData = snapshot?.product;
@@ -107,6 +113,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       const items = loadGuestCart();
       const idx = items.findIndex(i => i.productId === productId && (i.variantId || undefined) === (variantId || undefined));
+      const previousQuantity = idx >= 0 ? items[idx].quantity : 0;
       if (idx >= 0) {
         items[idx].quantity = Math.min(items[idx].quantity + quantity, items[idx].product.stock);
       } else {
@@ -121,10 +128,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       saveGuestCart(items);
       setGuestItems([...items]);
+      if ((items.find(i => i.productId === productId && (i.variantId || undefined) === (variantId || undefined))?.quantity || 0) > previousQuantity) recordCartAdd();
       return;
     }
     const res = await cartApi.addItem(productId, quantity, variantId);
-    if (res.success) setCart(res.data as Cart);
+    if (res.success) { setCart(res.data as Cart); recordCartAdd(); }
   };
 
   const updateItem = async (itemId: string, quantity: number) => {
